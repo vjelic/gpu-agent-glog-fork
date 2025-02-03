@@ -1,0 +1,80 @@
+
+//
+// Copyright(C) Advanced Micro Devices, Inc. All rights reserved.
+//
+// You may not use this software and documentation (if any) (collectively,
+// the "Materials") except in compliance with the terms and conditions of
+// the Software License Agreement included with the Materials or otherwise as
+// set forth in writing and signed by you and an authorized signatory of AMD.
+// If you do not have a copy of the Software License Agreement, contact your
+// AMD representative for a copy.
+//
+// You agree that you will not reverse engineer or decompile the Materials,
+// in whole or in part, except as allowed by applicable law.
+//
+// THE MATERIALS ARE DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+// REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+//
+
+
+//----------------------------------------------------------------------------
+///
+/// \file
+/// APIs used for troubleshooting
+///
+//----------------------------------------------------------------------------
+
+syntax = "proto3";
+package amdgpu;
+
+import "types.proto";
+
+service DebugSvc {
+  // API to update GPU agent tracing configuration
+  rpc TraceUpdate (TraceRequest) returns (TraceResponse) {}
+  // API to flush in memory traces to the log file
+  rpc TraceFlush(types.Empty) returns (types.Empty) {}
+  // API to query the tracing related configuration
+  rpc TraceGet (types.Empty) returns (TraceGetResponse) {}
+}
+
+// supported trace levels
+enum TraceLevel {
+  TRACE_LEVEL_NONE    = 0;    // no tracing at all
+  TRACE_LEVEL_ERROR   = 1;    // enable tracing only for error messages
+  TRACE_LEVEL_WARN    = 2;    // enable tracing only for warn messages
+  TRACE_LEVEL_INFO    = 3;    // enable tracing only for info messages
+  // DEBUG level is the default
+  TRACE_LEVEL_DEBUG   = 4;    // enable tracing only for debug messages
+  TRACE_LEVEL_VERBOSE = 5;    // enable tracing only for verbose messages
+}
+
+// TraceSpec captures tracing configuration
+message TraceSpec {
+  // trace level to set
+  TraceLevel TraceLevel = 1;
+  // enable or disable API tracing
+  bool       ApiTraceEn = 2;
+}
+
+// TraceRequest is the msg sent to gpuagent for tracing related configuration
+message TraceRequest {
+  // trace configuration parameters
+  TraceSpec Spec = 1;
+}
+
+// TraceResponse is sent in response to TraceRequest
+message TraceResponse {
+  // ApiStatus contains the response status or error code
+  types.ApiStatus ApiStatus  = 1;
+}
+
+// TraceGetResponse is sent in response to TraceGet() API call
+message TraceGetResponse {
+  // curent trace level
+  TraceLevel TraceLevel = 1;
+  // location of the trace file in the system
+  string     TraceFile  = 2;
+  // API trace enabled/disabled
+  bool       ApiTraceEn = 3;
+}

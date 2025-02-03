@@ -1,0 +1,225 @@
+
+//
+// Copyright(C) Advanced Micro Devices, Inc. All rights reserved.
+//
+// You may not use this software and documentation (if any) (collectively,
+// the "Materials") except in compliance with the terms and conditions of
+// the Software License Agreement included with the Materials or otherwise as
+// set forth in writing and signed by you and an authorized signatory of AMD.
+// If you do not have a copy of the Software License Agreement, contact your
+// AMD representative for a copy.
+//
+// You agree that you will not reverse engineer or decompile the Materials,
+// in whole or in part, except as allowed by applicable law.
+//
+// THE MATERIALS ARE DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+// REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+//
+
+
+//----------------------------------------------------------------------------
+///
+/// \file
+/// protobuf specifications to watch GPU attributes
+///
+//----------------------------------------------------------------------------
+
+syntax = "proto3";
+package amdgpu;
+
+import "gogo.proto";
+import "types.proto";
+
+// gRPC APIs for watch objects to monitor group of statistics of interest
+service GPUWatchSvc {
+  // API to create GPU watch object
+  rpc GPUWatchCreate(GPUWatchRequest) returns (GPUWatchResponse) {}
+  // API to delete GPU watch object
+  rpc GPUWatchDelete(GPUWatchDeleteRequest) returns (GPUWatchDeleteResponse) {}
+  // API to get GPU watch object
+  rpc GPUWatchGet(GPUWatchGetRequest) returns (GPUWatchGetResponse) {}
+  // API to subscribe to GPU watch object, GPUWatchSubscribe API will
+  // periodically send requested attributes and the specified GPUs in the
+  // GPU watch object to the client
+  rpc GPUWatchSubscribe(GPUWatchSubscribeRequest) returns (stream GPUWatch) {}
+}
+
+// identifiers of GPU watch attributes
+// NOTE:
+// not all watch attributes are supported in all GPUs. if an attribute is
+// is not supported, 0 will be returned as attribute value
+enum GPUWatchAttrId {
+  GPU_WATCH_ATTR_ID_INVALID             = 0;
+  GPU_WATCH_ATTR_ID_GPU_CLOCK           = 1;
+  GPU_WATCH_ATTR_ID_MEM_CLOCK           = 2;
+  GPU_WATCH_ATTR_ID_MEMORY_TEMP         = 3;
+  GPU_WATCH_ATTR_ID_GPU_TEMP            = 4;
+  GPU_WATCH_ATTR_ID_POWER_USAGE         = 5;
+  GPU_WATCH_ATTR_ID_PCIE_TX             = 6;
+  GPU_WATCH_ATTR_ID_PCIE_RX             = 7;
+  GPU_WATCH_ATTR_ID_GPU_UTIL            = 8;
+  GPU_WATCH_ATTR_ID_GPU_MEMORY_USAGE    = 9;
+  GPU_WATCH_ATTR_ID_ECC_CORRECT_TOTAL   = 10;
+  GPU_WATCH_ATTR_ID_ECC_UNCORRECT_TOTAL = 11;
+  GPU_WATCH_ATTR_ID_ECC_SDMA_CE         = 12;
+  GPU_WATCH_ATTR_ID_ECC_SDMA_UE         = 13;
+  GPU_WATCH_ATTR_ID_ECC_GFX_CE          = 14;
+  GPU_WATCH_ATTR_ID_ECC_GFX_UE          = 15;
+  GPU_WATCH_ATTR_ID_ECC_MMHUB_CE        = 16;
+  GPU_WATCH_ATTR_ID_ECC_MMHUB_UE        = 17;
+  GPU_WATCH_ATTR_ID_ECC_ATHUB_CE        = 18;
+  GPU_WATCH_ATTR_ID_ECC_ATHUB_UE        = 19;
+  GPU_WATCH_ATTR_ID_ECC_PCIE_BIF_CE     = 20;
+  GPU_WATCH_ATTR_ID_ECC_PCIE_BIF_UE     = 21;
+  GPU_WATCH_ATTR_ID_ECC_HDP_CE          = 22;
+  GPU_WATCH_ATTR_ID_ECC_HDP_UE          = 23;
+  GPU_WATCH_ATTR_ID_ECC_XGMI_WAFL_CE    = 24;
+  GPU_WATCH_ATTR_ID_ECC_XGMI_WAFL_UE    = 25;
+  GPU_WATCH_ATTR_ID_ECC_DF_CE           = 26;
+  GPU_WATCH_ATTR_ID_ECC_DF_UE           = 27;
+  GPU_WATCH_ATTR_ID_ECC_SMN_CE          = 28;
+  GPU_WATCH_ATTR_ID_ECC_SMN_UE          = 29;
+  GPU_WATCH_ATTR_ID_ECC_SEM_CE          = 30;
+  GPU_WATCH_ATTR_ID_ECC_SEM_UE          = 31;
+  GPU_WATCH_ATTR_ID_ECC_MP0_CE          = 32;
+  GPU_WATCH_ATTR_ID_ECC_MP0_UE          = 33;
+  GPU_WATCH_ATTR_ID_ECC_MP1_CE          = 34;
+  GPU_WATCH_ATTR_ID_ECC_MP1_UE          = 35;
+  GPU_WATCH_ATTR_ID_ECC_FUSE_CE         = 36;
+  GPU_WATCH_ATTR_ID_ECC_FUSE_UE         = 37;
+  GPU_WATCH_ATTR_ID_ECC_UMC_CE          = 38;
+  GPU_WATCH_ATTR_ID_ECC_UMC_UE          = 39;
+  GPU_WATCH_ATTR_ID_ECC_MCA_CE          = 40;
+  GPU_WATCH_ATTR_ID_ECC_MCA_UE          = 41;
+  GPU_WATCH_ATTR_ID_ECC_VCN_CE          = 42;
+  GPU_WATCH_ATTR_ID_ECC_VCN_UE          = 43;
+  GPU_WATCH_ATTR_ID_ECC_JPEG_CE         = 44;
+  GPU_WATCH_ATTR_ID_ECC_JPEG_UE         = 45;
+  GPU_WATCH_ATTR_ID_ECC_IH_CE           = 46;
+  GPU_WATCH_ATTR_ID_ECC_IH_UE           = 47;
+  GPU_WATCH_ATTR_ID_ECC_MPIO_CE         = 48;
+  GPU_WATCH_ATTR_ID_ECC_MPIO_UE         = 49;
+  GPU_WATCH_ATTR_ID_XGMI_0_NOP_TX       = 50;
+  GPU_WATCH_ATTR_ID_XGMI_0_REQ_TX       = 51;
+  GPU_WATCH_ATTR_ID_XGMI_0_RESP_TX      = 52;
+  GPU_WATCH_ATTR_ID_XGMI_0_BEATS_TX     = 53;
+  GPU_WATCH_ATTR_ID_XGMI_1_NOP_TX       = 54;
+  GPU_WATCH_ATTR_ID_XGMI_1_REQ_TX       = 55;
+  GPU_WATCH_ATTR_ID_XGMI_1_RESP_TX      = 56;
+  GPU_WATCH_ATTR_ID_XGMI_1_BEATS_TX     = 57;
+  GPU_WATCH_ATTR_ID_XGMI_0_THRPUT       = 58;
+  GPU_WATCH_ATTR_ID_XGMI_1_THRPUT       = 59;
+  GPU_WATCH_ATTR_ID_XGMI_2_THRPUT       = 60;
+  GPU_WATCH_ATTR_ID_XGMI_3_THRPUT       = 61;
+  GPU_WATCH_ATTR_ID_XGMI_4_THRPUT       = 62;
+  GPU_WATCH_ATTR_ID_XGMI_5_THRPUT       = 63;
+  GPU_WATCH_ATTR_ID_PCIE_BANDWIDTH      = 64;
+}
+
+// values of GPU watch attributes
+message GPUWatchAttrVal {
+  oneof watch_attr_val {
+    uint64 LongVal   = 1;
+    float  FloatVal  = 2;
+    string StringVal = 3;
+  }
+  // units for the value, ex: MHz, C, ...
+  string   Units     = 4;
+}
+
+// GPU watch attribute id and value
+message GPUWatchAttr {
+  // attribute identifier
+  GPUWatchAttrId  Id    = 1;
+  // attribute value
+  GPUWatchAttrVal Value = 2;
+}
+
+// GPUWatchAttrs contains the GPU ID and its watched attributes (id, value) list
+message GPUWatchAttrs {
+  bytes                 GPU  = 1;
+  // list of (id, value) pairs
+  repeated GPUWatchAttr Attr = 2;
+}
+
+// GPUWatchSpec captures the list of GPUs and GPU attributes to monitor and
+// associated configuration
+message GPUWatchSpec {
+  // uuid identifying the GPU watch object
+  bytes                   Id        = 1 [(gogoproto.moretags) = "meta:mandatory,immutable"];
+  // list of GPUs to monitor
+  // NOTE:
+  // atleast one GPU must be specified
+  repeated bytes          GPU       = 2;
+  // list of GPU attributes to monitor
+  // NOTE:
+  // atleast one GPU watch attribute must be specified
+  repeated GPUWatchAttrId Attribute = 3;
+}
+
+// operational state of the GPUWatch object
+message GPUWatchStatus {
+  // number of subscribers of the GPU watch object
+  uint32 NumSubscribers = 1;
+}
+
+// list of stats being watched
+message GPUWatchStats {
+  // one list of (attribute-id, attribute-value) are sent back per GPU
+  repeated GPUWatchAttrs GPUWatchAttr = 1;
+}
+
+// GPUWatch captures the config, operational status and stats of GPUWatch object
+message GPUWatch {
+  // GPUWatch config specification
+  GPUWatchSpec   Spec   = 1;
+  // GPUWatch operational status
+  GPUWatchStatus Status = 2;
+  // GPUWatch statistics
+  GPUWatchStats  Stats  = 3;
+}
+
+// GPUWatchRequest is used to create or update a watch group
+message GPUWatchRequest {
+  // GPU watch configuration
+  repeated GPUWatchSpec Spec = 1;
+}
+
+// GPUWatchResponse is sent in response to GPUWatchRequest
+message GPUWatchResponse {
+  // result of the API processing
+  types.ApiStatus ApiStatus = 1;
+}
+
+// GPUWatchGetRequest is sent to observe a GPUWatch that was created
+message GPUWatchGetRequest {
+  // list of uuids of interested GPUWatch objects
+  repeated bytes Id = 1;
+}
+
+// GPUWatchGetResponse is sent in response to GPUWatchGetRequest
+message GPUWatchGetResponse {
+  // status code indicating the result of the operation
+  types.ApiStatus   ApiStatus = 1;
+  // list of responses
+  repeated GPUWatch Response  = 2;
+}
+
+// GPUWatchSubscribeRequest is sent to subscribe to a GPUWatch that was created
+message GPUWatchSubscribeRequest {
+  // list of uuids of interested GPUWatch objects
+  repeated bytes Id = 1;
+}
+
+// GPUWatchDeleteRequest is used to delete an existing
+// watch group
+message GPUWatchDeleteRequest {
+  // list of uuids of watch groups to delete
+  repeated bytes Id = 1;
+}
+
+// GPUWatchDeleteResponse is sent in response to GPUWatchDeleteRequest
+message GPUWatchDeleteResponse {
+  // result of the API processing
+  types.ApiStatus ApiStatus = 1;
+}
