@@ -1,0 +1,104 @@
+
+//
+// Copyright(C) Advanced Micro Devices, Inc. All rights reserved.
+//
+// You may not use this software and documentation (if any) (collectively,
+// the "Materials") except in compliance with the terms and conditions of
+// the Software License Agreement included with the Materials or otherwise as
+// set forth in writing and signed by you and an authorized signatory of AMD.
+// If you do not have a copy of the Software License Agreement, contact your
+// AMD representative for a copy.
+//
+// You agree that you will not reverse engineer or decompile the Materials,
+// in whole or in part, except as allowed by applicable law.
+//
+// THE MATERIALS ARE DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+// REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+//
+
+
+//----------------------------------------------------------------------------
+///
+/// \file
+/// system level device topology APIs
+///
+//----------------------------------------------------------------------------
+
+syntax = "proto3";
+package amdgpu;
+
+import "types.proto";
+
+// TODO: CPU and NIC are not currently accounted here
+
+// gRPC APIs to manage & monitor GPU resources on the compute node
+service TopoSvc {
+  // get device topology details
+  rpc DeviceTopologyGet(DeviceTopologyGetRequest) returns (DeviceTopologyGetResponse) {}
+}
+
+// type of the device on the syste,
+enum DeviceType {
+  DEVICE_TYPE_NONE = 0;
+  // GPU device
+  DEVICE_TYPE_GPU  = 1;
+}
+
+// I/O link type between devices
+enum IOLinkType {
+  IO_LINK_TYPE_NONE = 0;
+  // PCIe connection to the device
+  IO_LINK_TYPE_PCIE = 1;
+  // XGMI connection to the device
+  IO_LINK_TYPE_XGMI = 2;
+}
+
+// DeviceConnection captures the device inter-connect link attributes
+message DeviceConnection {
+  // type of the I/O link
+  IOLinkType Type = 1;
+}
+
+// device entry
+message Device {
+  // unique device id
+  bytes      Id   = 1;
+  // type of the device
+  DeviceType Type = 2;
+  // name of the device
+  string     Name = 3;
+}
+
+// peer device and corresponding link/connection details
+message PeerDevice {
+  // peer device
+  Device           PeerDevice = 1;
+  // connection details to the peer device
+  DeviceConnection Connection = 2;
+  // distance in terms of no. of hops to the peer device
+  uint32           NumHops    = 3;
+  // weight assigned to the connection to peer device
+  uint32           Weight     = 4;
+}
+
+// topology/inter-connection details of one device
+message DeviceTopology {
+  // device under consideration
+  Device              Device     = 1;
+  // list of peer devices and corresponding inter-connection details
+  repeated PeerDevice PeerDevice = 2;
+}
+
+// device topology GET request
+message DeviceTopologyGetRequest {
+}
+
+// device toplogy GET response
+message DeviceTopologyGetResponse {
+  // result of the API processing
+  types.ApiStatus         ApiStatus      = 1;
+  // specific error code, if any
+  types.ErrorCode         ErrorCode      = 2;
+  // list of devices and corresponding connection details to other devices
+  repeated DeviceTopology DeviceTopology = 3;
+}
