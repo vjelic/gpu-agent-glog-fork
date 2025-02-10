@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <inttypes.h>
 
 #ifdef __cplusplus
@@ -56,6 +57,7 @@ int null_logger_cb_(uint32_t mod_id, trace_level_e trace_level,
 int stdout_logger_cb_(uint32_t mod_id, trace_level_e trace_level,
                       const char *fmt, ...);
 logger_trace_cb_t logger_trace_cb(void);
+bool logger_is_trace_cb_set(void);
 
 #ifdef __cplusplus
 }

@@ -27,244 +27,249 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include "include/sdk/globals.hpp"
-#include "lib/logger/logger_base.h"
+#include "logger_base.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define SDK_TRACE(...)              logger_trace_cb()(                         \
-                                        SDK_MOD_ID_SDK,                        \
+#define SDK_TRACE(...)              logger_trace_cb()(                                 \
+                                        SDK_MOD_ID_SDK,                                \
                                         ##__VA_ARGS__)
 
-#define SDK_TRACE_ERR(fmt, ...)     SDK_TRACE(trace_level_err,                 \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_TRACE_ERR(fmt, ...)     SDK_TRACE(trace_level_err,                         \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_TRACE_WARN(fmt, ...)    SDK_TRACE(trace_level_warn,                \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_TRACE_WARN(fmt, ...)    SDK_TRACE(trace_level_warn,                        \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_TRACE_INFO(fmt, ...)    SDK_TRACE(trace_level_info,                \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_TRACE_INFO(fmt, ...)    SDK_TRACE(trace_level_info,                        \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_TRACE_DEBUG(fmt, ...)   SDK_TRACE(trace_level_debug,               \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_TRACE_DEBUG(fmt, ...)   SDK_TRACE(trace_level_debug,                       \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_TRACE_VERBOSE(fmt, ...) SDK_TRACE(                                 \
-                                        trace_level_verbose,                   \
-                                        "[%s:%d] " fmt, __FNAME__, __LINE__,   \
+#define SDK_TRACE_VERBOSE(fmt, ...) SDK_TRACE(                                         \
+                                        trace_level_verbose,                           \
+                                        "[%s:%d] " fmt, __FNAME__, __LINE__,           \
                                         ##__VA_ARGS__)
 
 #define SDK_TRACE_PRINT             SDK_TRACE_DEBUG
 
-#define SDK_HMON_TRACE(...)              logger_trace_cb()(                    \
-                                             SDK_MOD_ID_HMON,                  \
+#define SDK_HMON_TRACE(...)              logger_trace_cb()(                            \
+                                             SDK_MOD_ID_HMON,                          \
                                              ##__VA_ARGS__)
 
-#define SDK_HMON_TRACE_ERR(fmt, ...)     SDK_HMON_TRACE(                       \
-                                             trace_level_err,                  \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TRACE_ERR(fmt, ...)     SDK_HMON_TRACE(                               \
+                                             trace_level_err,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TRACE_WARN(fmt, ...)    SDK_HMON_TRACE(                       \
-                                             trace_level_warn,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TRACE_WARN(fmt, ...)    SDK_HMON_TRACE(                               \
+                                             trace_level_warn,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TRACE_INFO(fmt, ...)    SDK_HMON_TRACE(                       \
-                                             trace_level_info,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TRACE_INFO(fmt, ...)    SDK_HMON_TRACE(                               \
+                                             trace_level_info,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TRACE_DEBUG(fmt, ...)   SDK_HMON_TRACE(                       \
-                                             trace_level_debug,                \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TRACE_DEBUG(fmt, ...)   SDK_HMON_TRACE(                               \
+                                             trace_level_debug,                        \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TRACE_VERBOSE(fmt, ...) SDK_HMON_TRACE(                       \
-                                             trace_level_verbose,              \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TRACE_VERBOSE(fmt, ...) SDK_HMON_TRACE(                               \
+                                             trace_level_verbose,                      \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE(...)              logger_trace_cb()(                    \
-                                             SDK_MOD_ID_BOOT,                  \
+#define SDK_BOOT_TRACE(...)              logger_trace_cb()(                            \
+                                             SDK_MOD_ID_BOOT,                          \
                                              ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE_ERR(fmt, ...)     SDK_BOOT_TRACE(                       \
-                                             trace_level_err,                  \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_BOOT_TRACE_ERR(fmt, ...)     SDK_BOOT_TRACE(                               \
+                                             trace_level_err,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE_WARN(fmt, ...)    SDK_BOOT_TRACE(                       \
-                                             trace_level_warn,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_BOOT_TRACE_WARN(fmt, ...)    SDK_BOOT_TRACE(                               \
+                                             trace_level_warn,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE_INFO(fmt, ...)    SDK_BOOT_TRACE(                       \
-                                             trace_level_info,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_BOOT_TRACE_INFO(fmt, ...)    SDK_BOOT_TRACE(                               \
+                                             trace_level_info,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE_DEBUG(fmt, ...)   SDK_BOOT_TRACE(                       \
-                                             trace_level_debug,                \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_BOOT_TRACE_DEBUG(fmt, ...)   SDK_BOOT_TRACE(                               \
+                                             trace_level_debug,                        \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_BOOT_TRACE_VERBOSE(fmt, ...) SDK_BOOT_TRACE(                       \
-                                             trace_level_verbose,              \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_BOOT_TRACE_VERBOSE(fmt, ...) SDK_BOOT_TRACE(                               \
+                                             trace_level_verbose,                      \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE(...)            logger_trace_cb()(                 \
-                                            SDK_MOD_ID_TEMP_HMON,              \
+#define SDK_HMON_TEMP_TRACE(...)            logger_trace_cb()(                         \
+                                            SDK_MOD_ID_TEMP_HMON,                      \
                                             ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE_ERR(fmt, ...)    SDK_HMON_TEMP_TRACE(              \
-                                             trace_level_err,                  \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TEMP_TRACE_ERR(fmt, ...)    SDK_HMON_TEMP_TRACE(                      \
+                                             trace_level_err,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE_WARN(fmt, ...)   SDK_HMON_TEMP_TRACE(              \
-                                             trace_level_warn,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TEMP_TRACE_WARN(fmt, ...)   SDK_HMON_TEMP_TRACE(                      \
+                                             trace_level_warn,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE_INFO(fmt, ...)   SDK_HMON_TEMP_TRACE(              \
-                                             trace_level_info,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TEMP_TRACE_INFO(fmt, ...)   SDK_HMON_TEMP_TRACE(                      \
+                                             trace_level_info,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE_DEBUG(fmt, ...)  SDK_HMON_TEMP_TRACE(              \
-                                             trace_level_debug,                \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_HMON_TEMP_TRACE_DEBUG(fmt, ...)  SDK_HMON_TEMP_TRACE(                      \
+                                             trace_level_debug,                        \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_TEMP_TRACE_VERBOSE(fmt, ...) SDK_HMON_TEMP_TRACE(             \
-                                              trace_level_verbose,             \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_HMON_TEMP_TRACE_VERBOSE(fmt, ...) SDK_HMON_TEMP_TRACE(                     \
+                                              trace_level_verbose,                     \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE(...) logger_trace_cb()(                        \
-                                       SDK_MOD_ID_RSC_HMON,                    \
+#define SDK_HMON_RESOURCE_TRACE(...) logger_trace_cb()(                                \
+                                       SDK_MOD_ID_RSC_HMON,                            \
                                        ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE_ERR(fmt, ...) SDK_HMON_RESOURCE_TRACE(         \
-                                              trace_level_err,                 \
-                                              "[%s:%d] " fmt, __FNAME__,       \
+#define SDK_HMON_RESOURCE_TRACE_ERR(fmt, ...) SDK_HMON_RESOURCE_TRACE(                 \
+                                              trace_level_err,                         \
+                                              "[%s:%d] " fmt, __FNAME__,               \
                                               __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE_WARN(fmt, ...) SDK_HMON_RESOURCE_TRACE(        \
-                                               trace_level_warn,               \
-                                               "[%s:%d] " fmt, __FNAME__,      \
+#define SDK_HMON_RESOURCE_TRACE_WARN(fmt, ...) SDK_HMON_RESOURCE_TRACE(                \
+                                               trace_level_warn,                       \
+                                               "[%s:%d] " fmt, __FNAME__,              \
                                                __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE_INFO(fmt, ...) SDK_HMON_RESOURCE_TRACE(        \
-                                               trace_level_info,               \
-                                               "[%s:%d] " fmt, __FNAME__,      \
+#define SDK_HMON_RESOURCE_TRACE_INFO(fmt, ...) SDK_HMON_RESOURCE_TRACE(                \
+                                               trace_level_info,                       \
+                                               "[%s:%d] " fmt, __FNAME__,              \
                                                __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE_DEBUG(fmt, ...) SDK_HMON_RESOURCE_TRACE(       \
-                                                trace_level_debug,             \
-                                                "[%s:%d] " fmt, __FNAME__,     \
+#define SDK_HMON_RESOURCE_TRACE_DEBUG(fmt, ...) SDK_HMON_RESOURCE_TRACE(               \
+                                                trace_level_debug,                     \
+                                                "[%s:%d] " fmt, __FNAME__,             \
                                                 __LINE__, ##__VA_ARGS__)
 
-#define SDK_HMON_RESOURCE_TRACE_VERBOSE(fmt, ...) SDK_HMON_RESOURCE_TRACE(     \
-                                                  trace_level_verbose,         \
-                                                  "[%s:%d] " fmt, __FNAME__,   \
+#define SDK_HMON_RESOURCE_TRACE_VERBOSE(fmt, ...) SDK_HMON_RESOURCE_TRACE(             \
+                                                  trace_level_verbose,                 \
+                                                  "[%s:%d] " fmt, __FNAME__,           \
                                                   __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE(...)              logger_trace_cb()(                    \
-                                             SDK_MOD_ID_INTR,                  \
+#define SDK_INTR_TRACE(...)              logger_trace_cb()(                            \
+                                             SDK_MOD_ID_INTR,                          \
                                              ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE_ERR(fmt, ...)     SDK_INTR_TRACE(                       \
-                                             trace_level_err,                  \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_INTR_TRACE_ERR(fmt, ...)     SDK_INTR_TRACE(                               \
+                                             trace_level_err,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE_WARN(fmt, ...)    SDK_INTR_TRACE(                       \
-                                             trace_level_warn,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_INTR_TRACE_WARN(fmt, ...)    SDK_INTR_TRACE(                               \
+                                             trace_level_warn,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE_INFO(fmt, ...)    SDK_INTR_TRACE(                       \
-                                             trace_level_info,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_INTR_TRACE_INFO(fmt, ...)    SDK_INTR_TRACE(                               \
+                                             trace_level_info,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE_DEBUG(fmt, ...)   SDK_INTR_TRACE(                       \
-                                             trace_level_debug,                \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_INTR_TRACE_DEBUG(fmt, ...)   SDK_INTR_TRACE(                               \
+                                             trace_level_debug,                        \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_TRACE_VERBOSE(fmt, ...) SDK_INTR_TRACE(                       \
-                                             trace_level_verbose,              \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_INTR_TRACE_VERBOSE(fmt, ...) SDK_INTR_TRACE(                               \
+                                             trace_level_verbose,                      \
+                                             "[%s:%d] " fmt, __FNAME__,                \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE(...) logger_trace_cb()(                         \
-                                        SDK_MOD_ID_INTR_ONETIME,               \
+#define SDK_INTR_ONETIME_TRACE(...) logger_trace_cb()(                                 \
+                                        SDK_MOD_ID_INTR_ONETIME,                       \
                                         ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE_ERR(fmt, ...) SDK_INTR_ONETIME_TRACE(           \
-                                                trace_level_err,               \
-                                                "[%s:%d] " fmt, __FNAME__,     \
+#define SDK_INTR_ONETIME_TRACE_ERR(fmt, ...) SDK_INTR_ONETIME_TRACE(                   \
+                                                trace_level_err,                       \
+                                                "[%s:%d] " fmt, __FNAME__,             \
                                                 __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE_WARN(fmt, ...) SDK_INTR_ONETIME_TRACE(          \
-                                                trace_level_warn,              \
-                                                "[%s:%d] " fmt, __FNAME__,     \
+#define SDK_INTR_ONETIME_TRACE_WARN(fmt, ...) SDK_INTR_ONETIME_TRACE(                   \
+                                                trace_level_warn,                       \
+                                                "[%s:%d] " fmt, __FNAME__,              \
                                                 __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE_INFO(fmt, ...) SDK_INTR_ONETIME_TRACE(          \
-                                                trace_level_info,              \
-                                                "[%s:%d] " fmt, __FNAME__,     \
+#define SDK_INTR_ONETIME_TRACE_INFO(fmt, ...) SDK_INTR_ONETIME_TRACE(                   \
+                                                trace_level_info,                       \
+                                                "[%s:%d] " fmt, __FNAME__,              \
                                                 __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE_DEBUG(fmt, ...) SDK_INTR_ONETIME_TRACE(         \
-                                                trace_level_debug,             \
-                                                "[%s:%d] " fmt, __FNAME__,     \
+#define SDK_INTR_ONETIME_TRACE_DEBUG(fmt, ...) SDK_INTR_ONETIME_TRACE(                  \
+                                                trace_level_debug,                      \
+                                                "[%s:%d] " fmt, __FNAME__,              \
                                                 __LINE__, ##__VA_ARGS__)
 
-#define SDK_INTR_ONETIME_TRACE_VERBOSE(fmt, ...) SDK_INTR_ONETIME_TRACE(       \
-                                                    trace_level_verbose,       \
-                                                    "[%s:%d] " fmt, __FNAME__, \
+#define SDK_INTR_ONETIME_TRACE_VERBOSE(fmt, ...) SDK_INTR_ONETIME_TRACE(                \
+                                                    trace_level_verbose,                \
+                                                    "[%s:%d] " fmt, __FNAME__,          \
                                                     __LINE__, ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE(...)              logger_trace_cb()(                    \
-                                             SDK_MOD_ID_LINK,                  \
+#define SDK_LINK_TRACE(...)              logger_trace_cb()(                             \
+                                             SDK_MOD_ID_LINK,                           \
                                              ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE_ERR(fmt, ...)     SDK_LINK_TRACE(                       \
-                                             trace_level_err,                  \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_LINK_TRACE_ERR(fmt, ...)     SDK_LINK_TRACE(                                \
+                                             trace_level_err,                           \
+                                             "[%s:%d] " fmt, __FNAME__,                 \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE_WARN(fmt, ...)    SDK_LINK_TRACE(                       \
-                                             trace_level_warn,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_LINK_TRACE_WARN(fmt, ...)    SDK_LINK_TRACE(                                \
+                                             trace_level_warn,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                 \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE_INFO(fmt, ...)    SDK_LINK_TRACE(                       \
-                                             trace_level_info,                 \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_LINK_TRACE_INFO(fmt, ...)    SDK_LINK_TRACE(                                \
+                                             trace_level_info,                          \
+                                             "[%s:%d] " fmt, __FNAME__,                 \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE_DEBUG(fmt, ...)   SDK_LINK_TRACE(                       \
-                                             trace_level_debug,                \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_LINK_TRACE_DEBUG(fmt, ...)   SDK_LINK_TRACE(                                \
+                                             trace_level_debug,                         \
+                                             "[%s:%d] " fmt, __FNAME__,                 \
                                              __LINE__, ##__VA_ARGS__)
 
-#define SDK_LINK_TRACE_VERBOSE(fmt, ...) SDK_LINK_TRACE(                       \
-                                             trace_level_verbose,              \
-                                             "[%s:%d] " fmt, __FNAME__,        \
+#define SDK_LINK_TRACE_VERBOSE(fmt, ...) SDK_LINK_TRACE(                                \
+                                             trace_level_verbose,                       \
+                                             "[%s:%d] " fmt, __FNAME__,                 \
                                              __LINE__, ##__VA_ARGS__)
 
-#define PAL_TRACE(...)                    logger_trace_cb()(                   \
-                                             __VA_ARGS__)
+#if defined(RTOS)
+#define PAL_TRACE(...)                   (logger_is_trace_cb_set()) ?                   \
+                                             logger_trace_cb()(__VA_ARGS__) :           \
+                                             null_logger_cb_(__VA_ARGS__)
+#else
+#define PAL_TRACE(...)                   logger_trace_cb()(__VA_ARGS__)
+#endif
 
 /// \brief    callback function to be used by rtos modules to hook into sdk
 ///           logger

@@ -20,13 +20,18 @@
 //------------------------------------------------------------------------------
 
 #include <stdio.h>
-#include "lib/logger/logger.h"
+#include <stdbool.h>
+#include "logger.h"
 
 #define SDK_LOGGER_MODULE_ID_INVALID    -1
 static __thread int t_mod_id = SDK_LOGGER_MODULE_ID_INVALID;
 static int g_main_mod_id = SDK_LOGGER_MODULE_ID_INVALID;
 
+#if defined(RTOS)
+static __thread logger_trace_cb_t trace_cb_ = NULL;
+#else
 logger_trace_cb_t trace_cb_ = NULL;
+#endif
 
 void
 logger_init (logger_trace_cb_t trace_cb)
@@ -88,4 +93,10 @@ logger_get_module_id (void)
         module_id = t_mod_id;
     }
     return module_id;
+}
+
+bool
+logger_is_trace_cb_set (void)
+{
+    return ((trace_cb_) ? true : false);
 }

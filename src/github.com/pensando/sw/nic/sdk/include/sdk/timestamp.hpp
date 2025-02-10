@@ -50,6 +50,7 @@ typedef struct timespec timespec_t;
 #define TIME_SECS_PER_MIN                            60
 #define TIME_MSECS_PER_MIN                           (60 * TIME_MSECS_PER_SEC)
 #define TIME_NSECS_PER_MIN                           (60 * TIME_NSECS_PER_SEC)
+#define TIME_HOURS_PER_DAY                           24
 
 #define TIME_STR_SIZE 30
 
