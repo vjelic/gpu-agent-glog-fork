@@ -1,23 +1,27 @@
-### To generate source tarball the contains gpuagent and all its dependencies:
+To build gpuagent, follow the steps below:
 
 ```
-1. attach to docker/shell container
-2. cd /sw/nic/
-3. gpuagent/tools/scripts/build_pkg.sh -—gen-src-tarball --build
+1. use the Dockerfile-u22.04 file to build docker image like below:
+
+   docker build . -f Dockerfile-u22.04 -t u22.04-gpuagent
+
+2. once docker image is built, launch the docker with the following command:
+
+   docker run -ti u22.04-gpuagent bash
+
+3. inside the docker:
+   mkdir -p /home/amd/
+   cd /home/amd/
+   git clone <gpuagent-repo-URL>
+   cd gpu-agent/src/github.com/pensando/sw/nic
+   make -C gpuagent
+
+4. gpuagent binary can be found at - /home/amd/src/github.com/pensando/sw/nic/build/x86_64/sim/bin/gpuagent
 ```
 
-this generates source tree under `/tmp/build/src/github.com/pensando/sw/nic/`
-and tar ball is generated at `/sw/gpuagent-src.tar.xz` and `--build` option
-ensure that build is successful. If build is not successful, then source code
-tarball generation is skipped.
-
-Above steps can be used in sanities or in scripts that periodically push the
-code to external repo
-
-
-### To re-build source code (if any changes are made after generating source tree)
+To clean the build artifacts:
 
 ```
-cd /tmp/build/src/github.com/pensando/sw/nic/gpuagent
-make
+1. cd /home/amd/src/github.com/pensando/sw/nic
+2. make -C gpuagent clean
 ```

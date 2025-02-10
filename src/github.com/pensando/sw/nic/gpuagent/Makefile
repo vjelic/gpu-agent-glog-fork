@@ -30,17 +30,15 @@ export BLD_GEN_DIR           := ${BLD_ARCH_DIR}/gen
 export BLD_PROTOGEN_DIR      := ${BLD_GEN_DIR}/proto
 export SDKDIR                := $(TOPDIR)/nic/sdk
 export CC                    := g++
-export PROTOC                ?= ${TOPDIR}/nic/third-party/google/x86_64/bin/protoc
+export PROTOC                := protoc
 
 export SPDLOG_INC_DIR        ?= ${TOPDIR}/nic/third-party/spdlog/include
-export PROTOBUF_INCLUDE      ?= ${TOPDIR}/nic/third-party/google/include
-export GRPC_INCLUDE          ?= ${PROTOBUF_INCLUDE} \
-                                ${TOPDIR}/nic/third-party/grpc/include
-export GRPC_CPP_PLUGIN       ?= ${TOPDIR}/nic/third-party/grpc/x86_64/bin/grpc_cpp_plugin
-export GRPC_PY_PLUGIN        ?= ${TOPDIR}/nic/third-party/grpc/x86_64/bin/grpc_python_plugin
-export PROTOC_LIB_PATH       ?= ${TOPDIR}/nic/third-party/google/x86_64/lib
-export OTHER_THIRD_PARTY_INC ?= ${SPDLOG_INC_DIR} ${GFLAGS_INC_DIR} \
-                                ${GRPC_INCLUDE}
+export PROTOBUF_INCLUDE      := /usr/local/include
+export GRPC_INCLUDE          := ${PROTOBUF_INCLUDE} /usr/local/include/grpc/include
+export GRPC_CPP_PLUGIN       := /usr/local/bin/grpc_cpp_plugin
+export GRPC_PY_PLUGIN        := /usr/local/bin/grpc_python_plugin
+export PROTOC_LIB_PATH       := /usr/local/lib
+export OTHER_THIRD_PARTY_INC ?= ${SPDLOG_INC_DIR} ${GFLAGS_INC_DIR} ${GRPC_INCLUDE}
 
 TARGET                       := gpuagent
 EXCLUDE_DIRS                 := $(TOPDIR)/nic/third-party
@@ -106,11 +104,12 @@ LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections -
                    -labsl_statusor -labsl_flags_commandlineflag_internal -labsl_flags_commandlineflag \
                    -labsl_flags_private_handle_accessor -labsl_flags_marshalling -labsl_flags_program_name \
                    -labsl_flags_config -labsl_flags_internal -labsl_flags_reflection -labsl_flags -labsl_flags_usage_internal \
-                   -labsl_flags_usage -labsl_flags_parse -lpthread -lz -lm -lrt -ldl -lev -lzmq -l:libboringssl.a -l:libboringcrypto.a \
-                   -ledit -lncurses -l:libamd_smi.so
+                   -labsl_flags_usage -labsl_flags_parse -lpthread -lz -lm -lrt -ldl -lev -lzmq -l:libssl.a -l:libcrypto.a \
+                   -l:libamd_smi.so
 
 $(TARGET): gogo-protos gen-protos $(OBJ)
-	$(CC) $(OBJ) $(LDFLAGS) -o  $(TARGET)
+	mkdir -p $(BLD_BIN_DIR)
+	$(CC) $(OBJ) $(LDFLAGS) -o  $(BLD_BIN_DIR)/$(TARGET)
 
 gen-protos:
 	@mkdir -p ${GPUAGENT_PROTO_GEN_DIR}
@@ -129,4 +128,4 @@ $(OBJ_DIR)/%.o: $(TOPDIR)/%.c
 	$(CC) $(CFLAGS)  $(INCS) -D__FNAME__=__FILE__ -c $< -o $@
 
 clean:
-	rm -rf $(TARGET) $(OBJ_DIR) $(BLD_PROTOGEN_DIR); sync
+	rm -rf $(BLD_BIN_DIR) $(OBJ_DIR) $(BLD_PROTOGEN_DIR); sync
