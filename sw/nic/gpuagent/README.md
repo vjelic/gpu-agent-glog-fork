@@ -13,15 +13,15 @@ To build gpuagent, follow the steps below:
    mkdir -p /home/amd/
    cd /home/amd/
    git clone <gpuagent-repo-URL>
-   cd gpu-agent/src/github.com/pensando/sw/nic
+   cd gpu-agent/sw/nic/
    make -C gpuagent
 
-4. gpuagent binary can be found at - /home/amd/src/github.com/pensando/sw/nic/build/x86_64/sim/bin/gpuagent
+4. gpuagent binary can be found at - /home/amd/src/github.com/gpu-agent/sw/nic/build/x86_64/sim/bin/gpuagent
 ```
 
 To clean the build artifacts:
 
 ```
-1. cd /home/amd/src/github.com/pensando/sw/nic
+1. cd /home/amd/src/github.com/gpu-agent/sw/nic/
 2. make -C gpuagent clean
 ```
