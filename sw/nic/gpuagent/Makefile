@@ -62,11 +62,11 @@ INC   := $(TOPDIR) $(BLD_ARCH_DIR) $(BLD_PROTOGEN_DIR) \
          $(TOPDIR)/nic/sdk/ $(OTHER_THIRD_PARTY_INC) \
          ${SDKDIR}/third-party/libev/include \
          ${TOPDIR}/nic/third-party/rocm/rocm_smi_lib/include \
+         ${TOPDIR}/nic/third-party/rocm/amd_smi_lib/include/
 
 # SMI sources
 SMI_CC_SRCS     := $(wildcard ${SMI_SRC_DIR}/*.cc)
 SMI_MOCK_SRCS   := $(wildcard ${SMI_SRC_DIR}/*mock*.cc)
-INC             += ${TOPDIR}/nic/third-party/rocm/amd_smi_lib/include/
 SMI_CC_SRCS     += $(wildcard ${SMI_SRC_DIR}/amdsmi/*.cc)
 SMI_MOCK_SRCS   += $(wildcard ${SMI_SRC_DIR}/amdsmi/*mock*.cc)
 SRC             += $(filter-out $(SMI_MOCK_SRCS), $(SMI_CC_SRCS))
@@ -86,7 +86,10 @@ OBJ_DIR         := $(BLD_OUT_DIR)/$(TARGET)_bin
 OBJ             := $(patsubst $(TOPDIR)/%, $(OBJ_DIR)/%, $(SRC:.cc=.o))
 OBJ             += $(patsubst $(TOPDIR)/%, $(OBJ_DIR)/%, $(SRC_C:.c=.o))
 INCS            := $(addprefix -I,${INC})
-LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections -Wl,-z,relro,-z,now -Wl,--build-id=md5 -Wl,--hash-style=gnu -L$(BLD_LIB_DIR) -Wl,-rpath,$(BLD_LIB_DIR) -Wl,-rpath-link,$(BLD_LIB_DIR) \
+LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections \
+                   -Wl,-z,relro,-z,now -Wl,--build-id=md5 -Wl,--hash-style=gnu \
+                   -L$(BLD_LIB_DIR) -L${TOPDIR}/nic/third-party/rocm/amd_smi_lib/x86_64/lib/ \
+                   -Wl,-rpath,$(BLD_LIB_DIR) -Wl,-rpath-link,$(BLD_LIB_DIR) \
                    -l:libprotobuf.so -lgrpc++_reflection -lgrpc++ -lgrpc -lgpr -lupb -lcares \
                    -laddress_sorting -l:libgrpc.a -l:libre2.a -labsl_synchronization -labsl_periodic_sampler -labsl_time \
                    -labsl_time_zone -labsl_int128 -labsl_bad_optional_access -labsl_bad_any_cast_impl -labsl_bad_variant_access\
