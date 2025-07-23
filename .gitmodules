@@ -1,0 +1,12 @@
+[submodule "sw/nic/third-party/grpc"]
+	path = sw/nic/third-party/grpc
+	url = https://github.com/grpc/grpc.git
+	branch = v1.44.0
+[submodule "sw/nic/third-party/protobuf"]
+	path = sw/nic/third-party/protobuf
+	url = https://github.com/protocolbuffers/protobuf.git
+	branch = v3.19.6
+[submodule "sw/nic/third-party/libzmq"]
+	path = sw/nic/third-party/libzmq
+	url = git@github.com:zeromq/libzmq.git
+	branch = v4.3.4
