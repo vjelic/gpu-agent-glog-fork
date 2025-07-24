@@ -10,11 +10,12 @@ boostdir=$dir/nic/third-party/boost_1_88_0
 abesildir=$dir/nic/third-party/abseil-cpp
 
 # Build protobuf
-cd $protodir \
-  && ./autogen.sh \
-  && ./configure --prefix=$outdir \
-	&& make -j$(nproc) \
-	&& make install
+cd $protodir &&\
+./autogen.sh && \
+./configure --prefix=$outdir && \
+make -j$(nproc) && \
+make install && \
+ldconfig
 
 
 # build abseil-cpp
@@ -24,7 +25,8 @@ cd cmake/build && \
 cmake -DCMAKE_INSTALL_PREFIX=$outdir \
   ../../ && \
 make -j$(nproc) && \
-make install
+make install && \
+ldconfig
 
 # Build grpc and grpc_cpp_plugin
 cd $grpcdir && \
@@ -35,14 +37,16 @@ cmake -DgRPC_INSTALL=ON \
   -DCMAKE_INSTALL_PREFIX=$outdir \
   ../../ && \
 make -j$(nproc) && \
-make install
+make install && \
+ldconfig
+
 cp $grpcdir/cmake/build/grpc_cpp_plugin /usr/local/bin/grpc_cpp_plugin
 
 dnf install -y --nobest gcc-c++
 
 #Build and install ZeroMQ from source
 cd $zeromqdir && \
-./autogen && \
+./autogen.sh && \
 ./configure --prefix=$outdir && \
 make -j$(nproc) && \
 make install && \
