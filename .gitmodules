@@ -10,3 +10,6 @@
 	path = sw/nic/third-party/libzmq
 	url = git@github.com:zeromq/libzmq.git
 	branch = v4.3.4
+[submodule "sw/nic/third-party/abseil-cpp"]
+	path = sw/nic/third-party/abseil-cpp
+	url = git@github.com:abseil/abseil-cpp.git
