@@ -1,0 +1,43 @@
+# ===== Stage 1: Library Builder =====
+ARG BUILD_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi:9.4
+FROM ${BUILD_BASE_IMAGE}
+
+LABEL maintainer="praveenkumar.shanmugam@amd.com"
+
+# Install build dependencies
+WORKDIR /usr/src/github.com/Rocm/gpu-agent/
+
+RUN dnf install -y --allowerasing \
+    git \
+    gcc \
+    gcc-c++ \
+    make \
+    automake \
+    libtool \
+    curl \
+    unzip \
+    which \
+    cmake \
+    autoconf \
+    glibc-static \
+    libstdc++-static \
+    wget \
+    && dnf clean all
+
+
+RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
+    rm -f go1.24.4.linux-amd64.tar.gz
+
+ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+  
+
+RUN go install github.com/gogo/protobuf/protoc-gen-gogofast@latest && \
+  go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@latest
+
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

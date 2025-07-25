@@ -2,28 +2,34 @@ GPU Agent provides programmable APIs to configure and monitor AMD Instinct GPUs
 
 To build GPU Agent, follow the steps below:
 
-```
-1. use the Dockerfile-u22.04 file to build docker image like below:
-
-   docker build . -f Dockerfile-u22.04 -t u22.04-gpuagent
-
-2. once docker image is built, launch the docker with the following command:
-
-   docker run -ti u22.04-gpuagent bash
-
-3. inside the docker:
-   mkdir -p /home/amd/
-   cd /home/amd/
-   git clone <gpuagent-repo-URL>
-   cd gpu-agent/sw/nic/
-   make -C gpuagent
-
-4. gpuagent binary can be found at - /home/amd/src/github.com/gpu-agent/sw/nic/build/x86_64/sim/bin/gpuagent
-```
-
-To clean the build artifacts:
+1. setup workspace (required once)
 
 ```
-1. cd /home/amd/src/github.com/gpu-agent/sw/nic/
-2. make -C gpuagent clean
+# make setup-ws
+```
+
+2. create build container image (required once)
+
+```
+# make build-container
+```
+   
+
+3. building gpuagent binary
+```
+# make gpuagent
+```
+
+
+4. artifacts location
+  - gpuagent binary can be found at - ${TOP_DIR}/sw/nic/build/x86_64/sim/bin/gpuagent
+
+5. To clean the build artifacts (run it within build-container)
+
+```
+# make gpuagent-shell
+[root@builder-container sw]# make -C nic/gpuagent clean
+[root@builder-container sw]# exit
+exit
+
 ```
