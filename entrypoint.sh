@@ -67,6 +67,10 @@ cd $boostdir && \
 # remove share folder (this has a main inside it on boost lib builder)
 rm -rf $outdir/share
 
+echo GOPATH=/root/go >> ~/.bashrc
+
+source ~/.bashrc
+
 cd $dir/nic
 make -C gpuagent
 

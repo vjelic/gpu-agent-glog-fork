@@ -1,40 +1,23 @@
-CUR_DIR=$(PWD)
-
-.PHONY: setup-ws
-setup-ws:
-	@cd $(CUR_DIR)/sw/nic/third-party/grpc
-	@git submodule update --init --depth 1 --recursive -f
-	@cd $(CUR_DIR)/sw/nic/third-party/protobuf
-	@git submodule update --init --recursive -f
-	@echo "updated module and workspace setup successful"
-
+CUR_DIR = $(PWD)
+CUR_USER:=$(shell whoami)
+CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
+GPUAGENT_BLD_CONTAINER_IMAGE ?= gpuagent-builder
+CONTAINER_NAME := gpuagent-ctr-${CUR_USER}_${CUR_TIME}
 
 .PHONY: build-container
 build-container:
-	@docker build  . -f Dokerfile.rhel9 -t gpuagent-builder
+	@docker build  . -f Dokerfile.rhel9 \
+		-t ${GPUAGENT_BLD_CONTAINER_IMAGE}
 
 .PHONY: gpuagent
 gpuagent:
-	@docker rm -f gpuagent-compiler || true
 	@docker run --rm -it --privileged \
 		--network host \
 		-e "USER_NAME=$(shell whoami)" \
 		-e "USER_UID=$(shell id -u)" \
 		-e "USER_GID=$(shell id -g)" \
-		--name gpuagent-compiler \
+		--name ${CONTAINER_NAME} \
 		-v $(PWD)/sw:/usr/src/github.com/ROCm/gpu-agent/sw \
 		-w 	/usr/src/github.com/ROCm/gpu-agent/sw \
-		gpuagent-builder
+		${GPUAGENT_BLD_CONTAINER_IMAGE}
 
-.PHONY: gpuagent-shell
-gpuagent-shell:
-	@docker run --rm -it --privileged \
-		--network host \
-		-e "USER_NAME=$(shell whoami)" \
-		-e "USER_UID=$(shell id -u)" \
-		-e "USER_GID=$(shell id -g)" \
-		--name gpuagent-compiler \
-		-v $(PWD)/sw:/usr/src/github.com/ROCm/gpu-agent/sw \
-		-w 	/usr/src/github.com/ROCm/gpu-agent/sw \
-		--entrypoint /bin/bash \
-		gpuagent-builder

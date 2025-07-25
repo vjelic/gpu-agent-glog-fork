@@ -18,6 +18,7 @@ export PIPELINE              := rudra
 export P4_PROGRAM            := pulsar
 export ASIC                  := salina
 export TOPDIR                := ${realpath ../..}
+export ABSDIR                := /usr/src/github.com/ROCm/gpu-agent/sw
 export ARCH                  ?= x86_64
 export PLATFORM              ?= sim
 export BLD_DIR               := $(TOPDIR)/nic/build
@@ -42,14 +43,19 @@ export OTHER_THIRD_PARTY_INC ?= ${SPDLOG_INC_DIR} ${GFLAGS_INC_DIR} ${GRPC_INCLU
 
 TARGET                       := gpuagent
 EXCLUDE_DIRS                 := $(TOPDIR)/nic/third-party
+EXCLUDE_VENDOR               := $(ABSDIR)/nic/gpuagent/vendor
 SMI_SRC_DIR                  := $(TOPDIR)/nic/gpuagent/api/smi
 GPUAGENT_PROTO_DIR           := protos
-GOGO_PROTO_DIR               := ${TOPDIR}/vendor/github.com/gogo/protobuf/gogoproto/
+GPUAGENT_PROTO_DIR_ABS       := ${TOPDIR}/nic/gpuagent/protos
+GOGO_PROTO_DIR               := ${TOPDIR}/vendor/github.com/gogo/protobuf/gogoproto
 GPUAGENT_PROTO_GEN_DIR       := ${BLD_PROTOGEN_DIR}/gpuagent/
+GPUAGENT_PROTO_GO_GEN_DIR    := ${ABSDIR}/nic/gpuagent/gen/go
 GPUAGENT_PROTO_SRCS          := $(wildcard ${GPUAGENT_PROTO_DIR}/*.proto)
+GPU_PROTO_GO_FILES           := $(filter-out protos/types.proto, $(wildcard ${GPUAGENT_PROTO_DIR_ABS}/*.proto))
 GOGO_PROTO_SRCS              := ${GOGO_PROTO_DIR}/gogo.proto
 
 SRC   := $(shell find $(TOPDIR) -type d \( -path $(EXCLUDE_DIRS) \) -prune -o \
+                                -type d \( -path $(EXCLUDE_VENDOR) \) -prune -o \
                                 -type d \( -path $(SMI_SRC_DIR) \) -prune -o \
                                 -type d \( -path $(BLD_PROTOGEN_DIR) \) -prune -o \
                                 -type f -name "*.cc" -print)
@@ -57,7 +63,9 @@ SRC   += $(patsubst $(GPUAGENT_PROTO_DIR)/%.proto, $(GPUAGENT_PROTO_GEN_DIR)/%.p
 SRC   += $(patsubst $(GPUAGENT_PROTO_DIR)/%.proto, $(GPUAGENT_PROTO_GEN_DIR)/%.grpc.pb.cc, $(GPUAGENT_PROTO_SRCS))
 SRC   += $(patsubst $(GOGO_PROTO_DIR)/%.proto, $(BLD_PROTOGEN_DIR)/%.pb.cc, $(GOGO_PROTO_SRCS))
 SRC   += $(patsubst $(GOGO_PROTO_DIR)/%.proto, $(BLD_PROTOGEN_DIR)/%.grpc.pb.cc, $(GOGO_PROTO_SRCS))
-SRC_C := $(shell find $(TOPDIR) -type d \( -path $(EXCLUDE_DIRS) \) -prune -o -type f -name "*.c" -print)
+SRC_C := $(shell find $(TOPDIR) -type d \( -path $(EXCLUDE_DIRS) \) -prune -o \
+                                -type d \( -path $(EXCLUDE_VENDOR) \) -prune -o \
+                                -type f -name "*.c" -print)
 INC   := $(TOPDIR) $(BLD_ARCH_DIR) $(BLD_PROTOGEN_DIR) \
          $(TOPDIR)/nic/sdk/ $(OTHER_THIRD_PARTY_INC) \
          ${TOPDIR}/nic/third-party/libzmq/include \
@@ -112,16 +120,26 @@ LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections \
                    -labsl_statusor -labsl_flags_commandlineflag_internal -labsl_flags_commandlineflag \
                    -labsl_flags_private_handle_accessor -labsl_flags_marshalling -labsl_flags_program_name \
                    -labsl_flags_config -labsl_flags_internal -labsl_flags_reflection -labsl_flags -labsl_flags_usage_internal \
-                   -labsl_flags_usage -labsl_flags_parse -lpthread -lz -lm -lrt -ldl -l:libev.a -l:libzmq.a -l:libssl.a -l:libcrypto.a \
-                   -l:libamd_smi.so
+                   -labsl_flags_usage -labsl_flags_parse -lpthread -lz -lm -lrt -ldl -l:libev.a -l:libzmq.a \
+                   -l:libssl.a -l:libcrypto.a -l:libamd_smi.so
 
 $(TARGET): gogo-protos gen-protos $(OBJ)
 	mkdir -p $(BLD_BIN_DIR)
 	$(CC) $(OBJ) $(LDFLAGS) -o  $(BLD_BIN_DIR)/$(TARGET)
+	${MAKE} gpuctl
 
 gen-protos:
 	@mkdir -p ${GPUAGENT_PROTO_GEN_DIR}
 	LC_ALL=C LD_LIBRARY_PATH=${PROTOC_LIB_PATH} ${PROTOC} --cpp_out=${GPUAGENT_PROTO_GEN_DIR} --grpc_out=${GPUAGENT_PROTO_GEN_DIR} ${PROTOC_CPP_OPTS} ${PROTO_INCS} ${PROTOC_DEFS} ${GPUAGENT_PROTO_SRCS}
+	@mkdir -p ${GPUAGENT_PROTO_GO_GEN_DIR}
+	${PROTOC} --proto_path=${GPUAGENT_PROTO_DIR_ABS} -I${GPUAGENT_PROTO_DIR_ABS} \
+    -I${ABSDIR}/vendor/github.com/gogo/protobuf/gogoproto \
+    --gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:${GPUAGENT_PROTO_GO_GEN_DIR} \
+    types.proto ${GPU_PROTO_GO_FILES}
+
+gpuctl:
+	@echo "building gpuctl"
+	CGO_ENABLED=0 go build -C cli -o ${BLD_BIN_DIR}/gpuctl
 
 gogo-protos:
 	@mkdir -p ${BLD_PROTOGEN_DIR}
