@@ -18,7 +18,8 @@ To build GPU Agent, follow the steps below:
 
 ```
 # $ make gpuagent-shell
-[root@dev sw]# cd nic/gpuagent/
+
+[root@dev gpu-agent]# cd sw/nic/gpuagent/
 [root@dev gpuagent]# go mod vendor
 
 ```
@@ -35,7 +36,7 @@ To build GPU Agent, follow the steps below:
 6. To clean the build artifacts (run it within build-container)
 
 ```
-[root@builder-container sw]# make -C nic/gpuagent clean
-[root@builder-container sw]# exit
+[root@dev gpu-agent]# make -C sw/nic/gpuagent clean
+[root@dev gpu-agent]# 
 ```
 

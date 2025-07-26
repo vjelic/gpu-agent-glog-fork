@@ -1,0 +1,81 @@
+#
+# Copyright(C) Advanced Micro Devices, Inc. All rights reserved.
+#
+# You may not use this software and documentation (if any) (collectively,
+# the "Materials") except in compliance with the terms and conditions of
+# the Software License Agreement included with the Materials or otherwise as
+# set forth in writing and signed by you and an authorized signatory of AMD.
+# If you do not have a copy of the Software License Agreement, contact your
+# AMD representative for a copy.
+#
+# You agree that you will not reverse engineer or decompile the Materials,
+# in whole or in part, except as allowed by applicable law.
+#
+# THE MATERIALS ARE DISTRIBUTED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OR
+# REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
+
+CC                    := gcc
+CXX                   := g++
+
+# Third-party build targets
+.PHONY: third-party-libs protobuf-build abseil-build grpc-build zeromq-build libev-build boost-build
+
+third-party-libs: protobuf-build abseil-build grpc-build zeromq-build libev-build boost-build
+
+protobuf-build:
+	@echo "Building protobuf..."
+	cd $(PROTOBUF_DIR) && \
+	./autogen.sh && \
+	./configure --prefix=$(BLD_DIR) && \
+	make -j$(shell nproc) && \
+	make install
+
+abseil-build:
+	@echo "Building abseil-cpp..."
+	cd $(ABSEIL_DIR) && \
+	mkdir -p cmake/build && \
+	cd cmake/build && \
+	cmake -DCMAKE_INSTALL_PREFIX=$(BLD_DIR) \
+		../../ && \
+	make -j$(shell nproc) && \
+	make install
+
+grpc-build: protobuf-build abseil-build
+	@echo "Building gRPC..."
+	cd $(GRPC_DIR) && \
+	mkdir -p cmake/build && \
+	cd cmake/build && \
+	cmake -DgRPC_INSTALL=ON \
+		-DgRPC_BUILD_TESTS=OFF \
+		-DCMAKE_INSTALL_PREFIX=$(BLD_DIR) \
+		../../ && \
+	make -j$(shell nproc) && \
+	make install && \
+	mkdir -p $(BLD_BIN_DIR) && \
+	cp -vf grpc_cpp_plugin $(BLD_BIN_DIR)/grpc_cpp_plugin && \
+	cp -vf grpc_python_plugin $(BLD_BIN_DIR)/grpc_python_plugin && \
+	rm -rf $(BLD_DIR)/lib/cmake && \
+	rm -rf $(GRPC_DIR)/cmake/build
+
+zeromq-build:
+	@echo "Building ZeroMQ..."
+	cd $(ZEROMQ_DIR) && \
+	./autogen.sh && \
+	./configure --prefix=$(BLD_DIR) && \
+	make -j$(shell nproc) && \
+	make install
+
+libev-build:
+	@echo "Building libev..."
+	cd $(LIBEV_DIR) && \
+	./configure --prefix=$(BLD_DIR) && \
+	make -j$(shell nproc) && \
+	make install
+
+boost-build:
+	@echo "Building Boost..."
+	cd $(BOOST_DIR) && \
+	./bootstrap.sh --prefix=$(BLD_DIR) && \
+	./b2 install && \
+	rm -rf $(BLD_DIR)/share
+
