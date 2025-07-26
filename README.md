@@ -5,7 +5,7 @@ To build GPU Agent, follow the steps below:
 1. setup workspace (required once)
 
 ```
-# make setup-ws
+# git submodule update --init  --recursive -f
 ```
 
 2. create build container image (required once)
@@ -13,23 +13,29 @@ To build GPU Agent, follow the steps below:
 ```
 # make build-container
 ```
-   
 
-3. building gpuagent binary
+3. vendor setup workspace (required once)
+
+```
+# $ make gpuagent-shell
+[root@dev sw]# cd nic/gpuagent/
+[root@dev gpuagent]# go mod vendor
+
+```
+
+4. building artifacts
 ```
 # make gpuagent
 ```
 
-
-4. artifacts location
+5. artifacts location
   - gpuagent binary can be found at - ${TOP_DIR}/sw/nic/build/x86_64/sim/bin/gpuagent
+  - gpuctl binary can be found at - ${TOP_DIR}/sw/nic/build/x86_64/sim/bin/gpuctl
 
-5. To clean the build artifacts (run it within build-container)
+6. To clean the build artifacts (run it within build-container)
 
 ```
-# make gpuagent-shell
 [root@builder-container sw]# make -C nic/gpuagent clean
 [root@builder-container sw]# exit
-exit
-
 ```
+
