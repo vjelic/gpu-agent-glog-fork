@@ -18,10 +18,19 @@ export PIPELINE              := rudra
 export P4_PROGRAM            := pulsar
 export ASIC                  := salina
 export TOPDIR                := ${realpath ../..}
-export ABSDIR                := /usr/src/github.com/ROCm/gpu-agent/sw
+export ABS_DIR               := /usr/src/github.com/ROCm/gpu-agent/sw
 export ARCH                  ?= x86_64
 export PLATFORM              ?= sim
-export BLD_DIR               := $(TOPDIR)/nic/build
+export BLD_DIR               := $(ABS_DIR)/nic/build
+
+
+# Third-party library directories
+export PROTOBUF_DIR          := $(TOPDIR)/nic/third-party/protobuf
+export GRPC_DIR              := $(TOPDIR)/nic/third-party/grpc
+export ZEROMQ_DIR            := $(TOPDIR)/nic/third-party/libzmq
+export LIBEV_DIR             := $(TOPDIR)/nic/third-party/libev-4.33
+export BOOST_DIR             := $(TOPDIR)/nic/third-party/boost_1_88_0
+export ABSEIL_DIR            := $(TOPDIR)/nic/third-party/abseil-cpp
 
 export BLD_ARCH_DIR          := ${BLD_DIR}/$(ARCH)/$(PLATFORM)
 export BLD_OUT_DIR           := ${BLD_ARCH_DIR}/out
@@ -34,22 +43,22 @@ export CC                    := g++
 export PROTOC                := ${BLD_DIR}/bin/protoc
 
 export SPDLOG_INC_DIR        ?= ${TOPDIR}/nic/third-party/spdlog/include
-export PROTOBUF_INCLUDE      := ${TOPDIR}/nic/build/include
+export PROTOBUF_INCLUDE      := ${BLD_DIR}/include
 export GRPC_INCLUDE          := ${PROTOBUF_INCLUDE} /usr/local/include/grpc/include
-export GRPC_CPP_PLUGIN       := /usr/local/bin/grpc_cpp_plugin
-export GRPC_PY_PLUGIN        := /usr/local/bin/grpc_python_plugin
-export PROTOC_LIB_PATH       := ${TOPDIR}/nic/build/lib
+export GRPC_CPP_PLUGIN       := ${BLD_BIN_DIR}/grpc_cpp_plugin
+export GRPC_PY_PLUGIN        := ${BLD_BIN_DIR}/grpc_python_plugin
+export PROTOC_LIB_PATH       := ${BLD_DIR}/lib
 export OTHER_THIRD_PARTY_INC ?= ${SPDLOG_INC_DIR} ${GFLAGS_INC_DIR} ${GRPC_INCLUDE}
 
 TARGET                       := gpuagent
 EXCLUDE_DIRS                 := $(TOPDIR)/nic/third-party
-EXCLUDE_VENDOR               := $(ABSDIR)/nic/gpuagent/vendor
+EXCLUDE_VENDOR               := $(ABS_DIR)/nic/gpuagent/vendor
 SMI_SRC_DIR                  := $(TOPDIR)/nic/gpuagent/api/smi
 GPUAGENT_PROTO_DIR           := protos
 GPUAGENT_PROTO_DIR_ABS       := ${TOPDIR}/nic/gpuagent/protos
 GOGO_PROTO_DIR               := ${TOPDIR}/vendor/github.com/gogo/protobuf/gogoproto
 GPUAGENT_PROTO_GEN_DIR       := ${BLD_PROTOGEN_DIR}/gpuagent/
-GPUAGENT_PROTO_GO_GEN_DIR    := ${ABSDIR}/nic/gpuagent/gen/go
+GPUAGENT_PROTO_GO_GEN_DIR    := ${ABS_DIR}/nic/gpuagent/gen/go
 GPUAGENT_PROTO_SRCS          := $(wildcard ${GPUAGENT_PROTO_DIR}/*.proto)
 GPU_PROTO_GO_FILES           := $(filter-out protos/types.proto, $(wildcard ${GPUAGENT_PROTO_DIR_ABS}/*.proto))
 GOGO_PROTO_SRCS              := ${GOGO_PROTO_DIR}/gogo.proto
@@ -65,14 +74,11 @@ SRC   += $(patsubst $(GOGO_PROTO_DIR)/%.proto, $(BLD_PROTOGEN_DIR)/%.pb.cc, $(GO
 SRC   += $(patsubst $(GOGO_PROTO_DIR)/%.proto, $(BLD_PROTOGEN_DIR)/%.grpc.pb.cc, $(GOGO_PROTO_SRCS))
 SRC_C := $(shell find $(TOPDIR) -type d \( -path $(EXCLUDE_DIRS) \) -prune -o \
                                 -type d \( -path $(EXCLUDE_VENDOR) \) -prune -o \
+                                -type d \( -path $(BLD_DIR) \) -prune -o \
                                 -type f -name "*.c" -print)
 INC   := $(TOPDIR) $(BLD_ARCH_DIR) $(BLD_PROTOGEN_DIR) \
          $(TOPDIR)/nic/sdk/ $(OTHER_THIRD_PARTY_INC) \
-         ${TOPDIR}/nic/third-party/libzmq/include \
-         ${TOPDIR}/nic/third-party/libev-4.33/include \
-         ${TOPDIR}/nic/third-party/boost_1_88_0/include \
-         ${TOPDIR}/nic/third-party/abseil-cpp/include \
-         ${TOPDIR}/nic/build/include \
+         ${BLD_DIR}/include \
          ${TOPDIR}/nic/third-party/rocm/rocm_smi_lib/include \
          ${TOPDIR}/nic/third-party/rocm/amd_smi_lib/include/
 
@@ -123,17 +129,23 @@ LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections \
                    -labsl_flags_usage -labsl_flags_parse -lpthread -lz -lm -lrt -ldl -l:libev.a -l:libzmq.a \
                    -l:libssl.a -l:libcrypto.a -l:libamd_smi.so
 
-$(TARGET): gogo-protos gen-protos $(OBJ)
+$(TARGET): build-libs gogo-protos gen-protos $(OBJ)
 	mkdir -p $(BLD_BIN_DIR)
 	$(CC) $(OBJ) $(LDFLAGS) -o  $(BLD_BIN_DIR)/$(TARGET)
 	${MAKE} gpuctl
+
+# these are maintained in seperate file to keep the variables and settings
+# contained (TBD, clean up later)
+.PHONY: build-libs
+build-libs:
+	$(MAKE) -f Makefile.lib third-party-libs
 
 gen-protos:
 	@mkdir -p ${GPUAGENT_PROTO_GEN_DIR}
 	LC_ALL=C LD_LIBRARY_PATH=${PROTOC_LIB_PATH} ${PROTOC} --cpp_out=${GPUAGENT_PROTO_GEN_DIR} --grpc_out=${GPUAGENT_PROTO_GEN_DIR} ${PROTOC_CPP_OPTS} ${PROTO_INCS} ${PROTOC_DEFS} ${GPUAGENT_PROTO_SRCS}
 	@mkdir -p ${GPUAGENT_PROTO_GO_GEN_DIR}
 	${PROTOC} --proto_path=${GPUAGENT_PROTO_DIR_ABS} -I${GPUAGENT_PROTO_DIR_ABS} \
-    -I${ABSDIR}/vendor/github.com/gogo/protobuf/gogoproto \
+    -I${ABS_DIR}/vendor/github.com/gogo/protobuf/gogoproto \
     --gogofast_out=Mgogo.proto=github.com/gogo/protobuf/gogoproto,plugins=grpc:${GPUAGENT_PROTO_GO_GEN_DIR} \
     types.proto ${GPU_PROTO_GO_FILES}
 
@@ -153,5 +165,8 @@ $(OBJ_DIR)/%.o: $(TOPDIR)/%.c
 	@mkdir -p $(dir $@)  # Create the necessary subdirectories in temp
 	$(CC) $(CFLAGS)  $(INCS) -D__FNAME__=__FILE__ -c $< -o $@
 
+
 clean:
-	rm -rf $(BLD_BIN_DIR) $(OBJ_DIR) $(BLD_PROTOGEN_DIR); sync
+	rm -rf $(BLD_BIN_DIR) $(OBJ_DIR) $(BLD_PROTOGEN_DIR); \
+	rm -rf $(GRPC_DIR)/cmake/build; \
+	rm -rf $(ABSEIL_DIR)/cmake/build; sync

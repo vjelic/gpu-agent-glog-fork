@@ -1,4 +1,5 @@
-# ===== Stage 1: Library Builder =====
+# This container provides a development environment with all necessary 
+# compilation and development tools pre-installed.
 ARG BUILD_BASE_IMAGE=registry.access.redhat.com/ubi9/ubi:9.4
 FROM ${BUILD_BASE_IMAGE}
 
@@ -22,8 +23,10 @@ RUN dnf install -y --allowerasing \
     glibc-static \
     libstdc++-static \
     wget \
+    yum \
     && dnf clean all
 
+RUN yum install -y sudo
 
 RUN wget https://go.dev/dl/go1.24.4.linux-amd64.tar.gz && \
     tar -C /usr/local -xzf go1.24.4.linux-amd64.tar.gz && \
@@ -33,15 +36,7 @@ ENV PATH=$PATH:/usr/local/go/bin:/root/go/bin
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
   
-
-RUN go install github.com/gogo/protobuf/protoc-gen-gogofast@v1.3.2 && \
-    go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc@v1.5.1 && \
-    go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.34.2 && \
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.5.1
-
-RUN echo "GOPATH=/root/go" >> ~/.bashrc
-
-COPY entrypoint.sh /entrypoint.sh
+ADD ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
