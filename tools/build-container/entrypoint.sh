@@ -11,6 +11,7 @@ trap term INT TERM
 mkdir -p ${dir}
 mkdir -p ${netns}
 rm -f $dir/.container_ready
+git config --global --add safe.directory $dir
 export GOFLAGS=-mod=vendor
 
 if [[ -n "${USER_NAME:-}" && -n "${USER_UID:-}" && -n "${USER_GID:-}" ]]; then
@@ -23,7 +24,9 @@ if [[ -n "${USER_NAME:-}" && -n "${USER_UID:-}" && -n "${USER_GID:-}" ]]; then
 	if ! id -u "$USER_NAME" >/dev/null 2>&1; then
 		useradd -m -u "$USER_UID" -g "$USER_GID" -s /bin/bash "$USER_NAME"
 		# Add user to wheel group for sudo on RHEL
-		usermod -aG wheel "$USER_NAME"
+		if ! grep -qi "ubuntu" /etc/os-release; then
+			usermod -aG wheel "$USER_NAME"
+		fi
 		echo "$USER_NAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USER_NAME
 		chmod 0440 /etc/sudoers.d/$USER_NAME
 	fi
