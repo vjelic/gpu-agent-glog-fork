@@ -1,7 +1,8 @@
 CUR_DIR = $(PWD)
 CUR_USER:=$(shell whoami)
 CUR_TIME:=$(shell date +%Y-%m-%d_%H.%M.%S)
-GPUAGENT_BLD_CONTAINER_IMAGE ?= gpuagent-builder
+GPUAGENT_BLD_CONTAINER_IMAGE ?= gpuagent-builder-rhel:9
+GPUAGENT_BLD_CONTAINER_IMAGE_UBUNTU ?= gpuagent-bldr-ubuntu:22.04
 CONTAINER_NAME := gpuagent-ctr-${CUR_USER}_${CUR_TIME}
 CONTAINER_WORKDIR := /usr/src/github.com/ROCm/gpu-agent
 BUILD_DATE ?= $(shell date   +%Y-%m-%dT%H:%M:%S%z)
@@ -10,6 +11,7 @@ BUILD_BASE_IMAGE ?= registry.access.redhat.com/ubi9/ubi:9.4
 
 export BUILD_BASE_IMAGE
 export GPUAGENT_BLD_CONTAINER_IMAGE
+export GPUAGENT_BLD_CONTAINER_IMAGE_UBUNTU
 
 .PHONY: all
 all:
@@ -36,7 +38,7 @@ gpuagent:
 		-v $(CURDIR):$(CONTAINER_WORKDIR) \
 		-w $(CONTAINER_WORKDIR) \
 		${GPUAGENT_BLD_CONTAINER_IMAGE} \
-		bash -c " cd $(CONTAINER_WORKDIR) && source ~/.bashrc && git config --global --add safe.directory $(CONTAINER_WORKDIR) && make gopkglist && make -C sw/nic/gpuagent -j$(nproc)"
+		bash -c " cd $(CONTAINER_WORKDIR) && source ~/.bashrc && git config --global --add safe.directory $(CONTAINER_WORKDIR) && make gopkglist && make -C sw/nic/gpuagent -j$(shell nproc)"
 
 .PHONY: docker-shell
 docker-shell:
