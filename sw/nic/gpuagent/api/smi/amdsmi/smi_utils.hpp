@@ -84,32 +84,27 @@ static inline aga_vram_vendor_t
 smi_to_aga_vram_vendor (amdsmi_vram_vendor_type_t vendor)
 {
     switch (vendor) {
-    case AMDSMI_VRAM_VENDOR__SAMSUNG:
+    case AMDSMI_VRAM_VENDOR_SAMSUNG:
         return AGA_VRAM_VENDOR_SAMSUNG;
-    case AMDSMI_VRAM_VENDOR__INFINEON:
+    case AMDSMI_VRAM_VENDOR_INFINEON:
         return AGA_VRAM_VENDOR_INFINEON;
-    case AMDSMI_VRAM_VENDOR__ELPIDA:
+    case AMDSMI_VRAM_VENDOR_ELPIDA:
         return AGA_VRAM_VENDOR_ELPIDA;
-    case AMDSMI_VRAM_VENDOR__ETRON:
+    case AMDSMI_VRAM_VENDOR_ETRON:
         return AGA_VRAM_VENDOR_ETRON;
-    case AMDSMI_VRAM_VENDOR__NANYA:
+    case AMDSMI_VRAM_VENDOR_NANYA:
         return AGA_VRAM_VENDOR_NANYA;
-    case AMDSMI_VRAM_VENDOR__HYNIX:
+    case AMDSMI_VRAM_VENDOR_HYNIX:
         return AGA_VRAM_VENDOR_HYNIX;
-    case AMDSMI_VRAM_VENDOR__MOSEL:
+    case AMDSMI_VRAM_VENDOR_MOSEL:
         return AGA_VRAM_VENDOR_MOSEL;
-    case AMDSMI_VRAM_VENDOR__WINBOND:
+    case AMDSMI_VRAM_VENDOR_WINBOND:
         return AGA_VRAM_VENDOR_WINBOND;
-    case AMDSMI_VRAM_VENDOR__ESMT:
+    case AMDSMI_VRAM_VENDOR_ESMT:
         return AGA_VRAM_VENDOR_ESMT;
-    case AMDSMI_VRAM_VENDOR__MICRON:
+    case AMDSMI_VRAM_VENDOR_MICRON:
         return AGA_VRAM_VENDOR_MICRON;
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER0:
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER1:
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER2:
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER3:
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER4:
-    case AMDSMI_VRAM_VENDOR__PLACEHOLDER5:
+    case AMDSMI_VRAM_VENDOR_UNKNOWN:
         return AGA_VRAM_VENDOR_UNKNOWN;
     default:
         break;
@@ -372,6 +367,72 @@ smi_to_aga_gpu_compute_partition_type (std::string partition_type)
     }
 
     return AGA_GPU_COMPUTE_PARTITION_TYPE_NONE;
+}
+
+/// \brief convert aga compute partition type to amdsmi comptue partition type
+/// \param[in] partition_type aga compute partition type
+/// \return    amdsmi gpu compute partition type
+static inline amdsmi_compute_partition_type_t
+aga_to_smi_gpu_compute_partition_type (
+    aga_gpu_compute_partition_type_t partition_type)
+{
+    switch (partition_type) {
+    case AGA_GPU_COMPUTE_PARTITION_TYPE_SPX:
+        return AMDSMI_COMPUTE_PARTITION_SPX;
+    case AGA_GPU_COMPUTE_PARTITION_TYPE_DPX:
+        return AMDSMI_COMPUTE_PARTITION_DPX;
+    case AGA_GPU_COMPUTE_PARTITION_TYPE_TPX:
+        return AMDSMI_COMPUTE_PARTITION_TPX;
+    case AGA_GPU_COMPUTE_PARTITION_TYPE_QPX:
+        return AMDSMI_COMPUTE_PARTITION_QPX;
+    case AGA_GPU_COMPUTE_PARTITION_TYPE_CPX:
+        return AMDSMI_COMPUTE_PARTITION_CPX;
+    default:
+        break;
+    }
+    return AMDSMI_COMPUTE_PARTITION_INVALID;
+}
+
+/// \brief convert amdsmi memory partition type string to aga memory partition
+///        type
+/// \param[in] partition_type amdsmi memory partition type string
+/// \return    aga gpu memory partition type
+static inline aga_gpu_memory_partition_type_t
+smi_to_aga_gpu_memory_partition_type (std::string partition_type)
+{
+    if (partition_type == "NPS1") {
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS1;
+    } else if (partition_type == "NPS2") {
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS2;
+    } else if (partition_type == "NPS4") {
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS4;
+    } else if (partition_type == "NPS8") {
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS8;
+    }
+
+    return AGA_GPU_MEMORY_PARTITION_TYPE_NONE;
+}
+
+/// \brief convert aga memory partition type to amdsmi memory partition type
+/// \param[in] partition_type aga memory partition type
+/// \return    amdsmi gpu memory partition type
+static inline amdsmi_memory_partition_type_t
+aga_to_smi_gpu_memory_partition_type (
+    aga_gpu_memory_partition_type_t partition_type)
+{
+    switch (partition_type) {
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS1:
+        return AMDSMI_MEMORY_PARTITION_NPS1;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS2:
+        return AMDSMI_MEMORY_PARTITION_NPS2;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS4:
+        return AMDSMI_MEMORY_PARTITION_NPS4;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS8:
+        return AMDSMI_MEMORY_PARTITION_NPS8;
+    default:
+        break;
+    }
+    return AMDSMI_MEMORY_PARTITION_UNKNOWN;
 }
 
 /// \brief     convert amdsmi return status to sdk return status

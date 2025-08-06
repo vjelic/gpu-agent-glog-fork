@@ -169,6 +169,8 @@ create_gpus (void)
             parent_entry->add_child_gpu(&spec.key);
             parent_entry->set_compute_partition_type(
                               spec.compute_partition_type);
+            parent_entry->set_memory_partition_type(
+                              spec.memory_partition_type);
         }
     }
     return SDK_RET_OK;

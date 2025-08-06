@@ -42,11 +42,11 @@ limitations under the License.
 
 #define AGA_MAX_STR_LEN                 128
 // max. number of GPUs in a compute node
-#define AGA_MAX_GPU                     16
+#define AGA_MAX_GPU                     128
 // max. number of numa nodes (sockets) in a compute node
 #define AGA_MAX_SOCKET                  16
 // max. processors per num node (socket)
-#define AGA_MAX_PROCESSORS_PER_SOCKET   4
+#define AGA_MAX_PROCESSORS_PER_SOCKET   32
 
 // error codes for objects
 // NOTE:

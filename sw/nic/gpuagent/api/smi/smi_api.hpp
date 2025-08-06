@@ -61,10 +61,13 @@ sdk_ret_t smi_gpu_fill_status(aga_gpu_handle_t handle, uint32_t id,
                               aga_gpu_status_t *status);
 
 /// \brief    fill gpu object statistics
-/// \param[in] handle    GPU handle
+/// \param[in] handle                   GPU handle
+/// \param[in] main_partition_handle    in case of GPU partitions, handle of the
+///                                     first partition, else, GPU handle
 /// \param[out] stats    gpu object stats to be filled
 /// \return     SDK_RET_OK or error code in case of failure
 sdk_ret_t smi_gpu_fill_stats(aga_gpu_handle_t handle,
+                             aga_gpu_handle_t first_partition_handle,
                              aga_gpu_stats_t *stats);
 
 /// \brief    read all the events and invokve the callback provided for each

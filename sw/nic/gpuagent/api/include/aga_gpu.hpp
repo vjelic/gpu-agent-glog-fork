@@ -151,6 +151,20 @@ typedef enum aga_gpu_compute_partition_type_e {
     AGA_GPU_COMPUTE_PARTITION_TYPE_CPX  = 5,
 } aga_gpu_compute_partition_type_t;
 
+/// GPU memory partition type
+typedef enum aga_gpu_memory_partition_type_e {
+    /// unknown/invalid partition type
+    AGA_GPU_MEMORY_PARTITION_TYPE_NONE = 0,
+    /// one NUMA per socket
+    AGA_GPU_MEMORY_PARTITION_TYPE_NPS1 = 1,
+    /// two NUMA per socket
+    AGA_GPU_MEMORY_PARTITION_TYPE_NPS2 = 2,
+    /// four NUMA per socket
+    AGA_GPU_MEMORY_PARTITION_TYPE_NPS4 = 3,
+    /// eight NUMA per socket
+    AGA_GPU_MEMORY_PARTITION_TYPE_NPS8 = 4,
+} aga_gpu_memory_partition_type_t;
+
 /// \brief GPU specification
 typedef struct aga_gpu_spec_s {
     /// uuid of gpu
@@ -183,6 +197,8 @@ typedef struct aga_gpu_spec_s {
     aga_gpu_ras_spec_t ras_spec;
     /// GPU compute partition type
     aga_gpu_compute_partition_type_t compute_partition_type;
+    /// GPU memory partition type
+    aga_gpu_memory_partition_type_t memory_partition_type;
 } aga_gpu_spec_t;
 
 /// \brief GPU operational state
@@ -734,11 +750,19 @@ typedef struct aga_gpu_compute_partition_info_s {
     /// physical GPU
     aga_obj_key_t physical_gpu;
     /// compute partition type
-    aga_gpu_compute_partition_type_t compute_partition_type;
+    aga_gpu_compute_partition_type_t partition_type;
     /// GPU partitions (child GPUs)
     uint32_t num_gpu_partition;
     aga_obj_key_t gpu_partition[AGA_GPU_MAX_PARTITION];
 } aga_gpu_compute_partition_info_t;
+
+/// GPU memory partition info
+typedef struct aga_gpu_memory_partition_info_s {
+    /// physical GPU
+    aga_obj_key_t physical_gpu;
+    /// memory partition type
+    aga_gpu_memory_partition_type_t partition_type;
+} aga_gpu_memory_partition_info_t;
 
 /// \brief     create gpu
 /// \param[in] spec config specification
@@ -777,6 +801,36 @@ typedef void (*gpu_compute_partition_read_cb_t)
 /// \return #SDK_RET_OK on success, failure status code on error
 sdk_ret_t aga_gpu_compute_partition_read_all(
               _In_ gpu_compute_partition_read_cb_t gpu_read_cb,
+              _In_ void *ctxt);
+
+/// \brief      function to set compute partition type for a GPU
+/// \param[in]  spec  spec of the GPU including information about compute
+///                   partition type to be set
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t aga_gpu_compute_partition_set(_In_ aga_gpu_spec_t *spec);
+
+/// \brief      function to set memory partition type for a GPU
+/// \param[in]  spec  spec of the GPU including information about memory
+///                   partition type to be set
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t aga_gpu_memory_partition_set(_In_ aga_gpu_spec_t *spec);
+
+/// \brief      function to get memory partition info of a given physical gpu
+/// \param[in]  key  key of the physical gpu object
+/// \param[out] info information
+/// \return     #SDK_RET_OK on success, failure status code on error
+sdk_ret_t aga_gpu_memory_partition_read(_In_ aga_obj_key_t *key,
+              _Out_ aga_gpu_memory_partition_info_t *info);
+
+typedef void (*gpu_memory_partition_read_cb_t)
+    (aga_gpu_memory_partition_info_t *info, void *ctxt);
+
+/// \brief      read memory partition info of all physical gpus
+/// \param[in]  cb      callback function
+/// \param[in]  ctxt    opaque context passed to cb
+/// \return #SDK_RET_OK on success, failure status code on error
+sdk_ret_t aga_gpu_memory_partition_read_all(
+              _In_ gpu_memory_partition_read_cb_t gpu_read_cb,
               _In_ void *ctxt);
 
 typedef void (*gpu_bad_page_read_cb_t)(uint32_t num_bad_pages,

@@ -56,7 +56,7 @@ api_msg_handle_cb (api_msg_t *api_msg, sdk::ipc::ipc_msg_ptr ipc_msg)
     api_ctxt = req->apis.at(0);
     api_params = api_ctxt->api_params;
     AGA_TRACE_DEBUG("Handling api {} on obj {}, key {}", api_ctxt->api_op,
-                    api_ctxt->obj_id, api_ctxt->api_op,
+                    api_ctxt->obj_id,
                     api_params->obj_key(api_ctxt->obj_id,
                                         api_ctxt->api_op).str());
     switch (api_ctxt->api_op) {

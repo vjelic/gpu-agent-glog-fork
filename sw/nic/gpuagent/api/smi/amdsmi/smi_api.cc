@@ -52,8 +52,8 @@ smi_fill_gpu_clock_frequency_spec_ (aga_gpu_handle_t gpu_handle,
                                     aga_gpu_spec_t *spec)
 {
     uint32_t clk_cnt = 0;
-    amdsmi_clk_info_t info;
     amdsmi_status_t amdsmi_ret;
+    amdsmi_clk_info_t info = {};
     aga_gpu_clock_freq_range_t *clock_spec;
 
     amdsmi_ret = amdsmi_get_clock_info(gpu_handle, AMDSMI_CLK_TYPE_GFX,
@@ -119,9 +119,9 @@ smi_gpu_fill_spec (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec)
 {
     uint32_t value_32;
     amdsmi_status_t amdsmi_ret;
-    char compute_partition_type[AGA_MAX_STR_LEN + 1];
-    amdsmi_dev_perf_level_t perf_level;
-    amdsmi_power_cap_info_t power_cap_info;
+    amdsmi_dev_perf_level_t perf_level = {};
+    char partition_type[AGA_MAX_STR_LEN + 1];
+    amdsmi_power_cap_info_t power_cap_info = {};
 
     // fill the overdrive level
     amdsmi_ret = amdsmi_get_gpu_overdrive_level(gpu_handle, &value_32);
@@ -158,13 +158,23 @@ smi_gpu_fill_spec (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec)
     smi_fill_gpu_clock_frequency_spec_(gpu_handle, spec);
     // fill compute partition type
     amdsmi_ret = amdsmi_get_gpu_compute_partition(gpu_handle,
-                     compute_partition_type, AGA_MAX_STR_LEN + 1);
+                     partition_type, AGA_MAX_STR_LEN + 1);
     if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
         AGA_TRACE_ERR("Failed to get compute partition for GPU {}, err {}",
                       gpu_handle, amdsmi_ret);
     } else {
         spec->compute_partition_type =
-            smi_to_aga_gpu_compute_partition_type(compute_partition_type);
+            smi_to_aga_gpu_compute_partition_type(partition_type);
+    }
+    // fill memory partition type
+    amdsmi_ret = amdsmi_get_gpu_memory_partition(gpu_handle,
+                     partition_type, AGA_MAX_STR_LEN + 1);
+    if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
+        AGA_TRACE_ERR("Failed to get memory partition for GPU {}, err {}",
+                      gpu_handle, amdsmi_ret);
+    } else {
+        spec->memory_partition_type =
+            smi_to_aga_gpu_memory_partition_type(partition_type);
     }
     // TODO: get admin_state
     // TODO: get RAS spec
@@ -997,16 +1007,26 @@ smi_fill_vram_usage_ (aga_gpu_handle_t gpu_handle,
 }
 
 sdk_ret_t
-smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle, aga_gpu_stats_t *stats)
+smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle,
+                    aga_gpu_handle_t first_partition_handle,
+                    aga_gpu_stats_t *stats)
 {
+    sdk_ret_t ret;
     int64_t temperature;
+    uint32_t partition_id;
     uint64_t power, value_64;
     float counter_resolution;
     amdsmi_status_t amdsmi_ret;
-    amdsmi_pcie_info_t pcie_info;
-    amdsmi_power_info_t power_info;
-    amdsmi_engine_usage_t usage_info;
-    amdsmi_gpu_metrics_t metrics_info;
+    amdsmi_pcie_info_t pcie_info = {};
+    amdsmi_power_info_t power_info = {};
+    amdsmi_engine_usage_t usage_info = {};
+    amdsmi_gpu_metrics_t metrics_info = {};
+
+    // get partition ID
+    ret = smi_get_gpu_partition_id(gpu_handle, &partition_id);
+    if (ret != SDK_RET_OK) {
+        return ret;
+    }
 
     // fill the power and voltage info
     amdsmi_ret = amdsmi_get_power_info(gpu_handle, &power_info);
@@ -1026,25 +1046,37 @@ smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle, aga_gpu_stats_t *stats)
         AGA_TRACE_ERR("Failed to get GPU activity for GPU {}, err {}",
                       gpu_handle, amdsmi_ret);
     } else {
-        stats->usage.gfx_activity = usage_info.gfx_activity;
         stats->usage.umc_activity = usage_info.umc_activity;
         stats->usage.mm_activity = usage_info.mm_activity;
     }
+    // get gfx, vcn and jpeg usage from first gpu partition
+    amdsmi_ret = amdsmi_get_gpu_metrics_info(first_partition_handle,
+                                             &metrics_info);
+    if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
+        AGA_TRACE_ERR("Failed to get GPU metrics info for GPU {}, err {}",
+                      first_partition_handle, amdsmi_ret);
+    } else {
+        stats->usage.gfx_activity =
+            metrics_info.xcp_stats[partition_id].gfx_busy_inst[partition_id];
+        stats->usage.num_vcn = AMDSMI_MAX_NUM_VCN;
+        for (uint16_t i = 0; i < stats->usage.num_vcn; i++) {
+            stats->usage.vcn_activity[i] =
+                metrics_info.xcp_stats[partition_id].vcn_busy[i];
+        }
+        stats->usage.num_jpeg = AMDSMI_MAX_NUM_JPEG;
+        for (uint16_t i = 0; i < stats->usage.num_jpeg; i++) {
+            stats->usage.jpeg_activity[i] =
+                metrics_info.xcp_stats[partition_id].jpeg_busy[i];
+        }
+    }
     // fill VRAM usage
     smi_fill_vram_usage_(gpu_handle, &stats->vram_usage);
+    // fill additional statistics from gpu metrics
     amdsmi_ret = amdsmi_get_gpu_metrics_info(gpu_handle, &metrics_info);
     if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
         AGA_TRACE_ERR("Failed to get GPU metrics info for GPU {}, err {}",
                       gpu_handle, amdsmi_ret);
     } else {
-        stats->usage.num_vcn = AMDSMI_MAX_NUM_VCN;
-        for (uint16_t i = 0; i < stats->usage.num_vcn; i++) {
-            stats->usage.vcn_activity[i] = metrics_info.vcn_activity[i];
-        }
-        stats->usage.num_jpeg = AMDSMI_MAX_NUM_JPEG;
-        for (uint16_t i = 0; i < stats->usage.num_jpeg; i++) {
-            stats->usage.jpeg_activity[i] = metrics_info.jpeg_activity[i];
-        }
         stats->fan_speed = metrics_info.current_fan_speed;
         stats->gfx_activity_accumulated = metrics_info.gfx_activity_acc;
         stats->mem_activity_accumulated = metrics_info.mem_activity_acc;
@@ -1337,12 +1369,41 @@ smi_gpu_update (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
     // 1. GPU overdrive level
     // 2. memory overdirve level
 
+    // set compute partition type; we return after this operation as it doesn't
+    // make sense to update other fields along with compute partition type
+    if (upd_mask & AGA_GPU_UPD_COMPUTE_PARTITION_TYPE) {
+        amdsmi_ret = amdsmi_set_gpu_compute_partition(gpu_handle,
+                         aga_to_smi_gpu_compute_partition_type(
+                             spec->compute_partition_type));
+        if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
+            AGA_TRACE_ERR("Failed to set GPU compute partition type to {}, "
+                          "GPU {}, err {}", spec->compute_partition_type,
+                          gpu_handle, amdsmi_ret);
+        }
+        return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
+    }
+
+    // set memory partition type; we return after this operation as it doesn't
+    // make sense to update other fields along with memory partition type
+    if (upd_mask & AGA_GPU_UPD_MEMORY_PARTITION_TYPE) {
+        amdsmi_ret = amdsmi_set_gpu_memory_partition(gpu_handle,
+                         aga_to_smi_gpu_memory_partition_type(
+                             spec->memory_partition_type));
+        if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
+            AGA_TRACE_ERR("Failed to set GPU memory partition type to {}, "
+                          "GPU {}, err {}", spec->memory_partition_type,
+                          gpu_handle, amdsmi_ret);
+        }
+        return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
+    }
+
     // set performance level to manual if required
     if (upd_mask & AGA_GPU_UPD_OVERDRIVE_LEVEL) {
         amdsmi_ret = amdsmi_get_gpu_perf_level(gpu_handle, &perf_level);
         if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
             AGA_TRACE_ERR("Failed to get performance level GPU {}, err {}",
                           gpu_handle, amdsmi_ret);
+            return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
         }
         // if performance level is not manual already, set it to manual
         if (perf_level != AMDSMI_DEV_PERF_LEVEL_MANUAL) {
@@ -1351,6 +1412,7 @@ smi_gpu_update (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
             if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
                 AGA_TRACE_ERR("Failed to set performance level to manual, "
                               "GPU {}, err {}", gpu_handle, amdsmi_ret);
+                return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
             }
         }
     }
@@ -1361,8 +1423,8 @@ smi_gpu_update (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
         if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
             AGA_TRACE_ERR("Failed to set overdrive level, GPU {}, err {}",
                           gpu_handle, amdsmi_ret);
+            return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
         }
-        return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
     }
     // system clock frequence range update
     if (upd_mask & AGA_GPU_UPD_CLOCK_FREQ_RANGE) {
@@ -1401,6 +1463,7 @@ smi_gpu_update (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
         if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
             AGA_TRACE_ERR("Failed to set performance level to {}, "
                           "GPU {}, err {}", perf_level, gpu_handle, amdsmi_ret);
+            return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
         }
     }
     // fan speed update
@@ -1410,6 +1473,7 @@ smi_gpu_update (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
         if (unlikely(amdsmi_ret != AMDSMI_STATUS_SUCCESS)) {
             AGA_TRACE_ERR("Failed to set fan speed to {}, GPU {}, err {}",
                           spec->fan_speed, gpu_handle, amdsmi_ret);
+            return (amdsmi_ret_to_sdk_ret(amdsmi_ret));
         }
     }
     // TODO: RAS spec update

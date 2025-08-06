@@ -103,7 +103,7 @@ typedef struct aga_gpu_read_args_s {
     gpu_read_cb_t cb;
 } aga_gpu_read_args_t;
 
-bool
+static bool
 aga_gpu_info_from_entry (void *entry, void *ctxt)
 {
     aga_gpu_info_t info;
@@ -152,7 +152,7 @@ aga_gpu_compute_partition_read (_In_ aga_obj_key_t *key,
     }
     // fill compute partition info
     info->physical_gpu = *key;
-    info->compute_partition_type = entry->compute_partition_type();
+    info->partition_type = entry->compute_partition_type();
     auto child_gpus = entry->child_gpus();
     info->num_gpu_partition = child_gpus.size();
     for (uint32_t i = 0; i < child_gpus.size(); i++) {
@@ -166,7 +166,7 @@ typedef struct aga_gpu_compute_partition_read_args_s {
     gpu_compute_partition_read_cb_t cb;
 } aga_gpu_compute_partition_read_args_t;
 
-bool
+static bool
 aga_gpu_compute_partition_info_from_entry (void *entry, void *ctxt)
 {
     gpu_entry *gpu = (gpu_entry *)entry;
@@ -185,7 +185,7 @@ aga_gpu_compute_partition_info_from_entry (void *entry, void *ctxt)
     memset(&info, 0, sizeof(aga_gpu_compute_partition_info_t));
     // fill compute partition info
     info.physical_gpu = gpu->key();
-    info.compute_partition_type = gpu->compute_partition_type();
+    info.partition_type = gpu->compute_partition_type();
     auto child_gpus = gpu->child_gpus();
     info.num_gpu_partition = child_gpus.size();
     for (uint32_t i = 0; i < child_gpus.size(); i++) {
@@ -207,12 +207,90 @@ aga_gpu_compute_partition_read_all (gpu_compute_partition_read_cb_t read_cb,
     return gpu_db()->walk(aga_gpu_compute_partition_info_from_entry, &args);
 }
 
+sdk_ret_t
+aga_gpu_compute_partition_set (_In_ aga_gpu_spec_t *spec)
+{
+    return aga_gpu_api_handle(API_OP_UPDATE, NULL, spec);
+}
+
+sdk_ret_t
+aga_gpu_memory_partition_set (_In_ aga_gpu_spec_t *spec)
+{
+    return aga_gpu_api_handle(API_OP_UPDATE, NULL, spec);
+}
+
+sdk_ret_t
+aga_gpu_memory_partition_read (_In_ aga_obj_key_t *key,
+                               _Out_ aga_gpu_memory_partition_info_t *info)
+{
+    sdk_ret_t ret;
+    gpu_entry *entry;
+
+    if (unlikely((key == NULL) || (info == NULL))) {
+        return SDK_RET_INVALID_ARG;
+    }
+    ret = aga_gpu_entry_find(key, &entry);
+    if (unlikely(ret != SDK_RET_OK)) {
+        return ret;
+    }
+    // skip non-partitioned GPUs
+    if (!entry->is_parent_gpu()) {
+        return SDK_RET_ENTRY_NOT_FOUND;
+    }
+    // fill memory partition info
+    info->physical_gpu = *key;
+    info->partition_type = entry->memory_partition_type();
+    auto child_gpus = entry->child_gpus();
+    return SDK_RET_OK;
+}
+
+typedef struct aga_gpu_memory_partition_read_args_s {
+    void *ctxt;
+    gpu_memory_partition_read_cb_t cb;
+} aga_gpu_memory_partition_read_args_t;
+
+static bool
+aga_gpu_memory_partition_info_from_entry (void *entry, void *ctxt)
+{
+    gpu_entry *gpu = (gpu_entry *)entry;
+    aga_gpu_memory_partition_info_t info;
+    aga_gpu_memory_partition_read_args_t *args =
+        (aga_gpu_memory_partition_read_args_t *)ctxt;
+
+    if (gpu->in_use()) {
+        // some API operation is in progress on this object, skip it
+        return false;
+    }
+    // skip non-partitioned GPUs
+    if (!gpu->is_parent_gpu()) {
+        return false;
+    }
+    memset(&info, 0, sizeof(aga_gpu_memory_partition_info_t));
+    // fill memory partition info
+    info.physical_gpu = gpu->key();
+    info.partition_type = gpu->memory_partition_type();
+    // call cb on info
+    args->cb(&info, args->ctxt);
+    return false;
+}
+
+sdk_ret_t
+aga_gpu_memory_partition_read_all (gpu_memory_partition_read_cb_t read_cb,
+                                   void *ctxt)
+{
+    aga_gpu_memory_partition_read_args_t args = { 0 };
+
+    args.ctxt = ctxt;
+    args.cb = read_cb;
+    return gpu_db()->walk(aga_gpu_memory_partition_info_from_entry, &args);
+}
+
 typedef struct aga_gpu_bad_page_read_args_s {
     void *ctxt;
     gpu_bad_page_read_cb_t cb;
 } aga_gpu_bad_page_read_args_t;
 
-bool
+static bool
 aga_gpu_bad_page_info_from_entry (void *entry, void *ctxt)
 {
     sdk_ret_t ret;
@@ -275,7 +353,7 @@ typedef struct aga_gpu_topology_read_args_s {
     device_topology_read_cb_t cb;
 } aga_gpu_topology_read_args_t;
 
-bool
+static bool
 aga_gpu_topology_info_from_entry (void *entry, void *ctxt)
 {
     aga_device_topology_info_t info;

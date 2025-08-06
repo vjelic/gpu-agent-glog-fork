@@ -37,6 +37,10 @@ service GPUSvc {
   rpc GPUComputePartitionSet(GPUComputePartitionSetRequest) returns (GPUComputePartitionSetResponse) {}
   // GPU partition get API
   rpc GPUComputePartitionGet(GPUComputePartitionGetRequest) returns (GPUComputePartitionGetResponse) {}
+  // GPU memory partition create/update API
+  rpc GPUMemoryPartitionSet(GPUMemoryPartitionSetRequest) returns (GPUMemoryPartitionSetResponse) {}
+  // GPU memory partition get API
+  rpc GPUMemoryPartitionGet(GPUMemoryPartitionGetRequest) returns (GPUMemoryPartitionGetResponse) {}
 
   // operational APIs or tasks
   // GPU reset API
@@ -133,6 +137,20 @@ enum GPUComputePartitionType {
   GPU_COMPUTE_PARTITION_TYPE_CPX  = 5;
 }
 
+// GPU memory partition type
+enum GPUMemoryPartitionType {
+  // unknown/invalid memory partition type
+  GPU_MEMORY_PARTITION_TYPE_NONE = 0;
+  // one NUMA per socket
+  GPU_MEMORY_PARTITION_TYPE_NPS1 = 1;
+  // two NUMA per socket
+  GPU_MEMORY_PARTITION_TYPE_NPS2 = 2;
+  // four NUMA per socket
+  GPU_MEMORY_PARTITION_TYPE_NPS4 = 3;
+  // eight NUMA per socket
+  GPU_MEMORY_PARTITION_TYPE_NPS8 = 4;
+}
+
 // config specification of physical GPU
 message GPUSpec {
   // uuid identifying the GPU
@@ -154,6 +172,8 @@ message GPUSpec {
   GPURASSpec                      RASSpec              = 8;
   // GPU compute partition type; partition type SPX means unpartitioned GPU
   GPUComputePartitionType         ComputePartitionType = 9;
+  // GPU memory partition type; partition type NPS1 means unpartitioned memory
+  GPUMemoryPartitionType          MemoryPartitionType  = 10;
 }
 
 // operational status of GPU
@@ -757,11 +777,11 @@ message GPUComputePartitionGetRequest {
 // GPU compute partition information
 message GPUComputePartition {
   // physical GPU uuid
-  bytes Id                                     = 1;
+  bytes Id                              = 1;
   // compute partition type
-  GPUComputePartitionType ComputePartitionType = 2;
+  GPUComputePartitionType PartitionType = 2;
   // partitioned GPUs
-  repeated bytes          GPUPartition         = 3;
+  repeated bytes          GPUPartition  = 3;
 }
 
 // response to GPU compute partition GET request
@@ -772,4 +792,44 @@ message GPUComputePartitionGetResponse {
   types.ErrorCode              ErrorCode = 2;
   // list of per GPU information
   repeated GPUComputePartition Response  = 3;
+}
+
+// GPU memory partition create/update request
+message GPUMemoryPartitionSetRequest {
+  // list of GPU uuids
+  repeated bytes          Id           = 1 [(gogoproto.moretags) = "meta:mandatory"];
+  // memory partitioning type to create or updated to
+  GPUMemoryPartitionType PartitionType = 2 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// GPU memory partition create/update response
+message GPUMemoryPartitionSetResponse {
+  // result of the API processing
+  types.ApiStatus ApiStatus = 1;
+  // specific error code, if any
+  types.ErrorCode ErrorCode = 2;
+}
+
+// GPU memory partition GET request
+message GPUMemoryPartitionGetRequest {
+  // list of GPU uuids
+  repeated bytes Id = 1 [(gogoproto.moretags) = "meta:mandatory"];
+}
+
+// GPU memory partition information
+message GPUMemoryPartition {
+  // GPU uuid
+  bytes Id                             = 1;
+  // memory partition type
+  GPUMemoryPartitionType PartitionType = 2;
+}
+
+// response to GPU memory partition GET request
+message GPUMemoryPartitionGetResponse {
+  // result of the API processing
+  types.ApiStatus             ApiStatus = 1;
+  // specific error code, if any
+  types.ErrorCode             ErrorCode = 2;
+  // list of per GPU information
+  repeated GPUMemoryPartition Response  = 3;
 }
