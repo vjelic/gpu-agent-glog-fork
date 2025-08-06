@@ -205,7 +205,9 @@ smi_gpu_fill_status (aga_gpu_handle_t gpu_handle, uint32_t gpu_id,
 }
 
 sdk_ret_t
-smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle, aga_gpu_stats_t *stats)
+smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle,
+                    aga_gpu_handle_t first_partition_handle,
+                    aga_gpu_stats_t *stats)
 {
     std::random_device rd; // obtain a random number from hardware
     std::mt19937 gen(rd()); // seed the generator

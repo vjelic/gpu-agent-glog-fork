@@ -60,6 +60,10 @@ using amdgpu::GPUComputePartitionSetRequest;
 using amdgpu::GPUComputePartitionSetResponse;
 using amdgpu::GPUComputePartitionGetRequest;
 using amdgpu::GPUComputePartitionGetResponse;
+using amdgpu::GPUMemoryPartitionSetRequest;
+using amdgpu::GPUMemoryPartitionSetResponse;
+using amdgpu::GPUMemoryPartitionGetRequest;
+using amdgpu::GPUMemoryPartitionGetResponse;
 
 class GPUSvcImpl final : public GPUSvc::Service {
 public:
@@ -78,6 +82,12 @@ public:
     Status GPUComputePartitionGet(ServerContext *context,
                const GPUComputePartitionGetRequest *proto_req,
                GPUComputePartitionGetResponse *proto_rsp) override;
+    Status GPUMemoryPartitionSet(ServerContext *context,
+               const GPUMemoryPartitionSetRequest *proto_req,
+               GPUMemoryPartitionSetResponse *proto_rsp) override;
+    Status GPUMemoryPartitionGet(ServerContext *context,
+               const GPUMemoryPartitionGetRequest *proto_req,
+               GPUMemoryPartitionGetResponse *proto_rsp) override;
 };
 
 class DebugGPUSvcImpl final : public DebugGPUSvc::Service {

@@ -51,6 +51,10 @@ var (
 	gpuAdminStateVal    aga.GPUAdminState
 	PerformanceLevelVal aga.GPUPerformanceLevel
 	clockType           aga.GPUClockType
+	memPartition        string
+	memPartitionVal     aga.GPUMemoryPartitionType
+	computePartition    string
+	computePartitionVal aga.GPUComputePartitionType
 	gpuClkType          string
 	gpuClkFreqLo        uint32
 	gpuClkFreqHi        uint32
@@ -159,6 +163,10 @@ func init() {
 		"Specify GPU clock type (memory, system, video or data)")
 	gpuUpdateCmd.Flags().StringVarP(&gpuClkFreq, "clock-frequency", "c", "",
 		"Specify GPU clock frequency range (lo-hi)")
+	gpuUpdateCmd.Flags().StringVarP(&memPartition, "memory-partition", "m", "",
+		"Specify GPU memory partition type (NPS1, NPS2, NPS4, NPS8)")
+	gpuUpdateCmd.Flags().StringVarP(&computePartition, "compute-partition", "",
+		"", "Specify GPU compute partition type (SPX, DPX, TPX, QPX, CPX)")
 	gpuUpdateCmd.Flags().Uint64VarP(&fanSpeed, "fan-speed", "s", 0,
 		"Specify fan speed")
 	gpuUpdateCmd.MarkFlagRequired("id")
@@ -185,7 +193,7 @@ func init() {
 
 func printGPUPartitions(resp *aga.GPUComputePartition) {
 	fmt.Printf("%-40s%-16s", utils.IdToStr(resp.GetId()),
-		strings.Replace(resp.GetComputePartitionType().String(),
+		strings.Replace(resp.GetPartitionType().String(),
 			"GPU_COMPUTE_PARTITION_TYPE_", "", -1))
 
 	for i, partition := range resp.GPUPartition {
@@ -198,9 +206,9 @@ func printGPUPartitions(resp *aga.GPUComputePartition) {
 }
 
 type ShadowGPUComputePartition struct {
-	Id                   string
-	ComputePartitionType aga.GPUComputePartitionType
-	GPUPartitions        []string
+	Id            string
+	PartitionType aga.GPUComputePartitionType
+	GPUPartition  []string
 }
 
 func NewGPUComputePartition(resp *aga.GPUComputePartition) *ShadowGPUComputePartition {
@@ -209,9 +217,9 @@ func NewGPUComputePartition(resp *aga.GPUComputePartition) *ShadowGPUComputePart
 		gpuPartitions = append(gpuPartitions, utils.IdToStr(child))
 	}
 	return &ShadowGPUComputePartition{
-		Id:                   utils.IdToStr(resp.GetId()),
-		ComputePartitionType: resp.GetComputePartitionType(),
-		GPUPartitions:        gpuPartitions,
+		Id:            utils.IdToStr(resp.GetId()),
+		PartitionType: resp.GetPartitionType(),
+		GPUPartition:  gpuPartitions,
 	}
 }
 
@@ -637,6 +645,12 @@ func printGPUSpec(gpu *aga.GPU, specOnly bool) {
 			strings.Replace(spec.GetComputePartitionType().String(),
 				"GPU_COMPUTE_PARTITION_TYPE_", "", -1))
 	}
+	if spec.GetMemoryPartitionType() !=
+		aga.GPUMemoryPartitionType_GPU_MEMORY_PARTITION_TYPE_NONE {
+		fmt.Printf("%-40s : %s\n", "Memory partition type",
+			strings.Replace(spec.GetMemoryPartitionType().String(),
+				"GPU_MEMORY_PARTITION_TYPE_", "", -1))
+	}
 	// TODO: fill GPU RAS Spec
 	if specOnly {
 		fmt.Printf("\n%s\n", strings.Repeat("-", 80))
@@ -978,7 +992,7 @@ func printGPUStats(gpu *aga.GPU, statsOnly bool) {
 	if stats.GetUsage() != nil {
 		printHdr = false
 		if stats.GetUsage().GetGFXActivity() != 0 &&
-			stats.GetUsage().GetGFXActivity() != UINT16_MAX_VAL_UINT32 {
+			stats.GetUsage().GetGFXActivity() != UINT32_MAX_VAL_UINT32 {
 			printUsageHdr(indent)
 			fmt.Printf(indent+"  %-36s : %d\n", "GFX activity",
 				stats.GetUsage().GetGFXActivity())
@@ -1466,6 +1480,47 @@ func gpuUpdateCmdPreRunE(cmd *cobra.Command, args []string) error {
 				"refer help")
 		}
 	}
+	if cmd.Flags().Changed("compute-partition") {
+		switch strings.ToLower(computePartition) {
+		case "spx":
+			computePartitionVal =
+				aga.GPUComputePartitionType_GPU_COMPUTE_PARTITION_TYPE_SPX
+		case "dpx":
+			computePartitionVal =
+				aga.GPUComputePartitionType_GPU_COMPUTE_PARTITION_TYPE_DPX
+		case "tpx":
+			computePartitionVal =
+				aga.GPUComputePartitionType_GPU_COMPUTE_PARTITION_TYPE_TPX
+		case "qpx":
+			computePartitionVal =
+				aga.GPUComputePartitionType_GPU_COMPUTE_PARTITION_TYPE_QPX
+		case "cpx":
+			computePartitionVal =
+				aga.GPUComputePartitionType_GPU_COMPUTE_PARTITION_TYPE_CPX
+		default:
+			return fmt.Errorf("Invalid argument for \"compute-partition\", " +
+				"please refer help")
+		}
+	}
+	if cmd.Flags().Changed("memory-partition") {
+		switch strings.ToLower(memPartition) {
+		case "nps1":
+			memPartitionVal =
+				aga.GPUMemoryPartitionType_GPU_MEMORY_PARTITION_TYPE_NPS1
+		case "nps2":
+			memPartitionVal =
+				aga.GPUMemoryPartitionType_GPU_MEMORY_PARTITION_TYPE_NPS2
+		case "nps4":
+			memPartitionVal =
+				aga.GPUMemoryPartitionType_GPU_MEMORY_PARTITION_TYPE_NPS4
+		case "nps8":
+			memPartitionVal =
+				aga.GPUMemoryPartitionType_GPU_MEMORY_PARTITION_TYPE_NPS8
+		default:
+			return fmt.Errorf("Invalid argument for \"memory-partition\", " +
+				"please refer help")
+		}
+	}
 	if cmd.Flags().Changed("perf-level") {
 		switch strings.ToLower(perfLevel) {
 		case "none":
@@ -1589,6 +1644,12 @@ func gpuUpdateCmdHandler(cmd *cobra.Command, args []string) error {
 	}
 	if cmd.Flags().Changed("fan-speed") {
 		updateSpec.FanSpeed = fanSpeed
+	}
+	if cmd.Flags().Changed("compute-partition") {
+		updateSpec.ComputePartitionType = computePartitionVal
+	}
+	if cmd.Flags().Changed("memory-partition") {
+		updateSpec.MemoryPartitionType = memPartitionVal
 	}
 	reqMsg := &aga.GPUUpdateRequest{
 		Spec: []*aga.GPUSpec{

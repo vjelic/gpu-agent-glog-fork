@@ -107,6 +107,12 @@ gpu_entry::update_handler(api_params_base *api_params) {
     uint64_t upd_mask = 0;
     aga_gpu_spec_t *spec = AGA_GPU_SPEC(api_params);
 
+    if (spec_.compute_partition_type != spec->compute_partition_type) {
+        upd_mask |= AGA_GPU_UPD_COMPUTE_PARTITION_TYPE;
+    }
+    if (spec_.memory_partition_type != spec->memory_partition_type) {
+        upd_mask |= AGA_GPU_UPD_MEMORY_PARTITION_TYPE;
+    }
     if (spec_.admin_state != spec->admin_state) {
         upd_mask |= AGA_GPU_UPD_ADMIN_STATE;
     }
@@ -140,6 +146,9 @@ gpu_entry::update_handler(api_params_base *api_params) {
 
 void
 gpu_entry::fill_stats_(aga_gpu_stats_t *stats) {
+    gpu_entry *parent_gpu;
+    aga_gpu_handle_t first_partition_handle;
+
     // fill stats only for non-parent GPUs
     if (child_gpus_.size()) {
         return;
@@ -202,8 +211,29 @@ gpu_entry::fill_stats_(aga_gpu_stats_t *stats) {
     stats->xgmi_neighbor4_tx_throughput = stats_.xgmi_neighbor4_tx_throughput;
     stats->xgmi_neighbor5_tx_throughput = stats_.xgmi_neighbor5_tx_throughput;
 
+    // initialize first partition handle to be the same as current GPUs handle
+    first_partition_handle = handle_;
+    // if partitioned GPU, get handle of first partition
+    if (parent_gpu_.valid()) {
+        // get parent GPU
+        parent_gpu = gpu_db()->find(&parent_gpu_);
+        if (!parent_gpu || !parent_gpu->child_gpus().size()) {
+            AGA_TRACE_ERR("Failed to find first GPU partition for GPU {}",
+                          key_.str());
+            return;
+        }
+        // get first child GPU
+        auto child_gpus = parent_gpu->child_gpus();
+        for (uint32_t i = 0; i < child_gpus.size(); i++) {
+            auto child = gpu_db()->find(&child_gpus[i]);
+            if (child && !child->partition_id()) {
+                first_partition_handle = child->handle();
+                break;
+            }
+        }
+    }
     // fetch stats from smi apis
-    smi_gpu_fill_stats(handle_, stats);
+    smi_gpu_fill_stats(handle_, first_partition_handle, stats);
 }
 
 void

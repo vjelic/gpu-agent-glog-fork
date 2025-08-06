@@ -89,7 +89,7 @@ gpu_state::remove(gpu_entry *gpu) {
 
 void
 gpu_state::free(gpu_entry *gpu) {
-    free(gpu);
+    ::free(gpu);
 }
 
 gpu_entry *

@@ -169,6 +169,52 @@ aga_svc_gpu_bad_page_get (const GPUBadPageGetRequest *proto_req,
 }
 
 static inline sdk_ret_t
+aga_svc_gpu_compute_partition_set (
+    const GPUComputePartitionSetRequest *proto_req,
+    GPUComputePartitionSetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    aga_obj_key_t key;
+    aga_gpu_info_t info;
+    aga_gpu_compute_partition_type_t compute_partition_type;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    aga_api_trace_verbose("GPUComputePartition", "Set", proto_req);
+
+    compute_partition_type = aga_gpu_compute_partition_type_to_spec(
+                                 proto_req->partitiontype());
+    if (compute_partition_type == AGA_GPU_COMPUTE_PARTITION_TYPE_NONE) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        aga_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        // first read existing GPU object and modify compute partition type
+        ret = aga_gpu_read(&key, &info);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        if (info.spec.compute_partition_type == compute_partition_type) {
+            AGA_TRACE_ERR("GPU {} partition type is already set to {}",
+                          key.str(), compute_partition_type);
+            goto end;
+        }
+        // set compute partition type
+        info.spec.compute_partition_type = compute_partition_type;
+        ret = aga_gpu_compute_partition_set(&info.spec);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+end:
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
 aga_svc_gpu_compute_partition_get (
     const GPUComputePartitionGetRequest *proto_req,
     GPUComputePartitionGetResponse *proto_rsp)
@@ -198,6 +244,86 @@ aga_svc_gpu_compute_partition_get (
         }
         proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
         aga_gpu_compute_partition_info_to_proto(&info, proto_rsp);
+    }
+    return ret;
+
+}
+
+static inline sdk_ret_t
+aga_svc_gpu_memory_partition_set (const GPUMemoryPartitionSetRequest *proto_req,
+                                  GPUMemoryPartitionSetResponse *proto_rsp)
+{
+	sdk_ret_t ret;
+    aga_obj_key_t key;
+    aga_gpu_info_t info;
+    aga_gpu_memory_partition_type_t memory_partition_type;
+
+    if ((proto_req == NULL) || (proto_req->id_size() == 0)) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    aga_api_trace_verbose("GPUMemoryPartition", "Set", proto_req);
+
+    memory_partition_type = aga_gpu_memory_partition_type_to_spec(
+                                proto_req->partitiontype());
+    if (memory_partition_type == AGA_GPU_MEMORY_PARTITION_TYPE_NONE) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    for (int i = 0; i < proto_req->id_size(); i++) {
+        aga_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        // first read existing GPU object and modify memory partition type
+        ret = aga_gpu_read(&key, &info);
+        if (unlikely(ret != SDK_RET_OK)) {
+            goto end;
+        }
+        if (info.spec.memory_partition_type == memory_partition_type) {
+            AGA_TRACE_ERR("GPU {} partition type is already set to {}",
+                          key.str(), memory_partition_type);
+            goto end;
+        }
+        // set memory partition type
+        info.spec.memory_partition_type = memory_partition_type;
+        ret = aga_gpu_memory_partition_set(&info.spec);
+        if (ret != SDK_RET_OK) {
+            goto end;
+        }
+    }
+end:
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    return ret;
+}
+
+static inline sdk_ret_t
+aga_svc_gpu_memory_partition_get (
+    const GPUMemoryPartitionGetRequest *proto_req,
+    GPUMemoryPartitionGetResponse *proto_rsp)
+{
+    sdk_ret_t ret;
+    aga_obj_key_t key;
+    aga_gpu_memory_partition_info_t info;
+
+    if (proto_req == NULL) {
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_INVALID_ARG);
+        return SDK_RET_INVALID_ARG;
+    }
+    aga_api_trace_verbose("GPUMemoryPartition", "Get", proto_req);
+    if (proto_req->id_size() == 0) {
+        ret = aga_gpu_memory_partition_read_all(
+                  aga_gpu_memory_partition_info_to_proto, proto_rsp);
+        proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+        return ret;
+    }
+    for (int i = 0; i < proto_req->id_size(); i ++) {
+        aga_obj_key_proto_to_api_spec(&key, proto_req->id(i));
+        memset(&info, 0, sizeof(aga_gpu_memory_partition_info_t));
+        ret = aga_gpu_memory_partition_read(&key, &info);
+        if (unlikely(ret != SDK_RET_OK)) {
+            proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+            break;
+        }
+        proto_rsp->set_apistatus(types::ApiStatus::API_STATUS_OK);
+        aga_gpu_memory_partition_info_to_proto(&info, proto_rsp);
     }
     return ret;
 

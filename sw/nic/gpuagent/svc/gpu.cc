@@ -78,8 +78,7 @@ GPUSvcImpl::GPUComputePartitionSet(ServerContext *context,
                 GPUComputePartitionSetResponse *proto_rsp) {
     sdk_ret_t ret = SDK_RET_INVALID_OP;
 
-    // TODO uncomment after implementing it
-    //ret = aga_svc_gpu_compute_partition_set(proto_req, proto_rsp);
+    ret = aga_svc_gpu_compute_partition_set(proto_req, proto_rsp);
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     proto_rsp->set_errorcode(sdk_ret_to_error_code(ret));
     return Status::OK;
@@ -92,6 +91,30 @@ GPUSvcImpl::GPUComputePartitionGet(ServerContext *context,
     sdk_ret_t ret;
 
     ret = aga_svc_gpu_compute_partition_get(proto_req, proto_rsp);
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    proto_rsp->set_errorcode(sdk_ret_to_error_code(ret));
+    return Status::OK;
+}
+
+Status
+GPUSvcImpl::GPUMemoryPartitionSet(ServerContext *context,
+                const GPUMemoryPartitionSetRequest *proto_req,
+                GPUMemoryPartitionSetResponse *proto_rsp) {
+    sdk_ret_t ret = SDK_RET_INVALID_OP;
+
+    ret = aga_svc_gpu_memory_partition_set(proto_req, proto_rsp);
+    proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
+    proto_rsp->set_errorcode(sdk_ret_to_error_code(ret));
+    return Status::OK;
+}
+
+Status
+GPUSvcImpl::GPUMemoryPartitionGet(ServerContext *context,
+                const GPUMemoryPartitionGetRequest *proto_req,
+                GPUMemoryPartitionGetResponse *proto_rsp) {
+    sdk_ret_t ret;
+
+    ret = aga_svc_gpu_memory_partition_get(proto_req, proto_rsp);
     proto_rsp->set_apistatus(sdk_ret_to_api_status(ret));
     proto_rsp->set_errorcode(sdk_ret_to_error_code(ret));
     return Status::OK;

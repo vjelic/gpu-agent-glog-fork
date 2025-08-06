@@ -41,6 +41,8 @@ namespace aga {
 #define AGA_GPU_UPD_CLOCK_FREQ_RANGE            0x10
 #define AGA_GPU_UPD_FAN_SPEED                   0x20
 #define AGA_GPU_UPD_RAS_SPEC                    0x40
+#define AGA_GPU_UPD_MEMORY_PARTITION_TYPE       0x80
+#define AGA_GPU_UPD_COMPUTE_PARTITION_TYPE      0x100
 
 // forward declaration
 class gpu_state;
@@ -213,6 +215,23 @@ public:
         // is set during init_spec
         if (child_gpus_.size() > 0) {
             spec_.compute_partition_type = partition_type;
+        }
+    }
+
+    /// \brief function to return memory partition type
+    /// \return partition type
+    aga_gpu_memory_partition_type_t memory_partition_type(void) {
+        return spec_.memory_partition_type;
+    }
+
+    /// \brief function to set memory partition type for partitioned GPUs
+    /// \return partition type
+    void set_memory_partition_type(
+             aga_gpu_memory_partition_type_t partition_type) {
+        // this function is only used for partitioned GPUs, for child GPUs this
+        // is set during init_spec
+        if (child_gpus_.size() > 0) {
+            spec_.memory_partition_type = partition_type;
         }
     }
 

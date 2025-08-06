@@ -131,7 +131,8 @@ LDFLAGS         := -pthread -rdynamic -no-canonical-prefixes -Wl,--gc-sections \
 
 $(TARGET): build-libs gogo-protos gen-protos $(OBJ)
 	mkdir -p $(BLD_BIN_DIR)
-	$(CC) $(OBJ) $(LDFLAGS) -o  $(BLD_BIN_DIR)/$(TARGET)
+	$(CC) $(OBJ) $(LDFLAGS) -o $(BLD_BIN_DIR)/$(TARGET)
+	$(CC) $(OBJ) $(LDFLAGS) -o $(BLD_BIN_DIR)/$(TARGET)_mock
 	${MAKE} gpuctl
 
 # these are maintained in seperate file to keep the variables and settings

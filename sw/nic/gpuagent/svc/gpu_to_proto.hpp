@@ -140,6 +140,23 @@ aga_gpu_compute_partition_type_to_proto (aga_gpu_compute_partition_type_t type)
     }
 }
 
+static inline amdgpu::GPUMemoryPartitionType
+aga_gpu_memory_partition_type_to_proto (aga_gpu_memory_partition_type_t type)
+{
+    switch (type) {
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS1:
+        return amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS1;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS2:
+        return amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS2;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS4:
+        return amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS4;
+    case AGA_GPU_MEMORY_PARTITION_TYPE_NPS8:
+        return amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS8;
+    default:
+        return amdgpu::GPU_MEMORY_PARTITION_TYPE_NONE;
+    }
+}
+
 // populate proto buf spec from gpu API spec
 static inline void
 aga_gpu_api_spec_to_proto (GPUSpec *proto_spec,
@@ -159,6 +176,9 @@ aga_gpu_api_spec_to_proto (GPUSpec *proto_spec,
     proto_spec->set_computepartitiontype(
                     aga_gpu_compute_partition_type_to_proto(
                         spec->compute_partition_type));
+    proto_spec->set_memorypartitiontype(
+                    aga_gpu_memory_partition_type_to_proto(
+                        spec->memory_partition_type));
     // TODO: fill gpu RAS spec
 }
 
@@ -459,14 +479,28 @@ aga_gpu_compute_partition_info_to_proto (
 
     auto resp = proto_rsp->add_response();
     resp->set_id(info->physical_gpu.id, OBJ_MAX_KEY_LEN);
-    resp->set_computepartitiontype(aga_gpu_compute_partition_type_to_proto(
-                                       info->compute_partition_type));
+    resp->set_partitiontype(aga_gpu_compute_partition_type_to_proto(
+                                info->partition_type));
     for (uint32_t i = 0; i < info->num_gpu_partition; i++) {
         if (info->gpu_partition[i].valid()) {
             resp->add_gpupartition(info->gpu_partition[i].id,
                                    OBJ_MAX_KEY_LEN);
         }
     }
+}
+
+// populate gpu memory partition get response proto buf
+static inline void
+aga_gpu_memory_partition_info_to_proto (
+    aga_gpu_memory_partition_info_t *info, void *ctxt)
+{
+    GPUMemoryPartitionGetResponse *proto_rsp =
+        (GPUMemoryPartitionGetResponse *)ctxt;
+
+    auto resp = proto_rsp->add_response();
+    resp->set_id(info->physical_gpu.id, OBJ_MAX_KEY_LEN);
+    resp->set_partitiontype(aga_gpu_memory_partition_type_to_proto(
+                                info->partition_type));
 }
 
 // populate temperature proto buf stats from gpu stats

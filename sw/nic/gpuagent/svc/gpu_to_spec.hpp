@@ -46,6 +46,42 @@ aga_gpu_admin_state_to_spec (amdgpu::GPUAdminState admin_state)
     return AGA_GPU_ADMIN_STATE_NONE;
 }
 
+static inline aga_gpu_compute_partition_type_t
+aga_gpu_compute_partition_type_to_spec (amdgpu::GPUComputePartitionType type)
+{
+    switch (type) {
+    case amdgpu::GPU_COMPUTE_PARTITION_TYPE_SPX:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_SPX;
+    case amdgpu::GPU_COMPUTE_PARTITION_TYPE_DPX:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_DPX;
+    case amdgpu::GPU_COMPUTE_PARTITION_TYPE_TPX:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_TPX;
+    case amdgpu::GPU_COMPUTE_PARTITION_TYPE_QPX:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_QPX;
+    case amdgpu::GPU_COMPUTE_PARTITION_TYPE_CPX:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_CPX;
+    default:
+        return AGA_GPU_COMPUTE_PARTITION_TYPE_NONE;
+    }
+}
+
+static inline aga_gpu_memory_partition_type_t
+aga_gpu_memory_partition_type_to_spec (amdgpu::GPUMemoryPartitionType type)
+{
+    switch (type) {
+    case amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS1:
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS1;
+    case amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS2:
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS2;
+    case amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS4:
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS4;
+    case amdgpu::GPU_MEMORY_PARTITION_TYPE_NPS8:
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NPS8;
+    default:
+        return AGA_GPU_MEMORY_PARTITION_TYPE_NONE;
+    }
+}
+
 static inline aga_gpu_clock_type_t
 aga_gpu_clock_type_to_spec (amdgpu::GPUClockType clock_type)
 {
@@ -201,6 +237,10 @@ aga_gpu_proto_to_api_spec (aga_gpu_spec_t *api_spec, const GPUSpec& proto_spec)
     api_spec->fan_speed = proto_spec.fanspeed();
     api_spec->perf_level =
         aga_gpu_power_overdrive_to_spec(proto_spec.performancelevel());
+    api_spec->memory_partition_type = aga_gpu_memory_partition_type_to_spec(
+                                          proto_spec.memorypartitiontype());
+    api_spec->compute_partition_type = aga_gpu_compute_partition_type_to_spec(
+                                           proto_spec.computepartitiontype());
     ret = aga_gpu_clock_spec_to_spec(api_spec, proto_spec);
     if (ret != SDK_RET_OK) {
         return ret;
