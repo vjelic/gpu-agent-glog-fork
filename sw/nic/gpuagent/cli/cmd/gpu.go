@@ -64,12 +64,13 @@ var (
 )
 
 const (
-	UINT16_MAX_VAL_UINT16 uint16 = 0xffff
-	UINT16_MAX_VAL_UINT32 uint32 = 0xffff
-	UINT16_MAX_VAL_UINT64 uint64 = 0xffff
-	UINT32_MAX_VAL_UINT32 uint32 = 0xffffffff
-	UINT32_MAX_VAL_UINT64 uint64 = 0xffffffff
-	UINT64_MAX_VAL        uint64 = 0xffffffffffffffff
+	UINT16_MAX_VAL_UINT16 uint16  = 0xffff
+	UINT16_MAX_VAL_UINT32 uint32  = 0xffff
+	UINT16_MAX_VAL_UINT64 uint64  = 0xffff
+	UINT32_MAX_VAL_UINT32 uint32  = 0xffffffff
+	UINT32_MAX_VAL_UINT64 uint64  = 0xffffffff
+	UINT64_MAX_VAL        uint64  = 0xffffffffffffffff
+	FLOAT32_INVALID_VAL   float32 = 65535.0
 )
 
 var gpuShowCmd = &cobra.Command{
@@ -685,6 +686,9 @@ func printGPUStatus(gpu *aga.GPU, statusOnly bool) {
 		indent = "  "
 	}
 	fmt.Printf(indent+"%-38s : %d\n", "Index", status.GetIndex())
+	fmt.Printf(indent+"%-38s : %d\n", "KFD id", status.GetKFDId())
+	fmt.Printf(indent+"%-38s : %d\n", "DRM render id", status.GetDRMRenderId())
+	fmt.Printf(indent+"%-38s : %d\n", "DRM card id", status.GetDRMCardId())
 	fmt.Printf(indent+"%-38s : 0x%x\n", "GPU handle", status.GetGPUHandle())
 	if status.GetSerialNum() != "" {
 		fmt.Printf(indent+"%-38s : %s\n", "Serial number",
@@ -965,24 +969,29 @@ func printGPUStats(gpu *aga.GPU, statsOnly bool) {
 	}
 	if stats.GetTemperature() != nil {
 		printHdr = false
-		if stats.GetTemperature().GetEdgeTemperature() != 0 {
+		if stats.GetTemperature().GetEdgeTemperature() != 0 &&
+			stats.GetTemperature().GetEdgeTemperature() != FLOAT32_INVALID_VAL {
 			printTemperatureHdr(indent)
 			fmt.Printf(indent+"  %-36s : %.1f\n", "Edge temperature (in C)",
 				stats.GetTemperature().GetEdgeTemperature())
 		}
-		if stats.GetTemperature().GetJunctionTemperature() != 0 {
+		if stats.GetTemperature().GetJunctionTemperature() != 0 &&
+			stats.GetTemperature().GetJunctionTemperature() !=
+				FLOAT32_INVALID_VAL {
 			printTemperatureHdr(indent)
 			fmt.Printf(indent+"  %-36s : %.1f\n", "Junction temperature (in C)",
 				stats.GetTemperature().GetJunctionTemperature())
 		}
-		if stats.GetTemperature().GetMemoryTemperature() != 0 {
+		if stats.GetTemperature().GetMemoryTemperature() != 0 &&
+			stats.GetTemperature().GetMemoryTemperature() !=
+				FLOAT32_INVALID_VAL {
 			printTemperatureHdr(indent)
 			fmt.Printf(indent+"  %-36s : %.1f\n", "VRAM temperature (in C)",
 				stats.GetTemperature().GetMemoryTemperature())
 		}
 		hbmTemp := stats.GetTemperature().GetHBMTemperature()
 		for index, temp := range hbmTemp {
-			if temp != 0 {
+			if temp != 0 && temp != FLOAT32_INVALID_VAL {
 				printTemperatureHdr(indent)
 				hbmStr := "HBM " + strconv.Itoa(index) + " temperature (in C)"
 				fmt.Printf(indent+"  %-36s : %.1f\n", hbmStr, temp)
@@ -1017,11 +1026,9 @@ func printGPUStats(gpu *aga.GPU, statsOnly bool) {
 			// print the field
 			if vcn == UINT16_MAX_VAL_UINT32 {
 				vStr = fmt.Sprintf("%sN/A ", vStr)
-			} else if vcn == 0 {
-				vStr = fmt.Sprintf("%s%d ", vStr, vcn)
 			} else {
 				validEntry = true
-				vStr = fmt.Sprintf("%s%d ", vStr, vcn)
+				vStr = fmt.Sprintf("%s%d%% ", vStr, vcn)
 			}
 		}
 		if validEntry {
@@ -1035,11 +1042,60 @@ func printGPUStats(gpu *aga.GPU, statsOnly bool) {
 			// we print the field
 			if jpeg == UINT16_MAX_VAL_UINT32 {
 				jStr = fmt.Sprintf("%sN/A ", jStr)
-			} else if jpeg == 0 {
-				jStr = fmt.Sprintf("%s%d ", jStr, jpeg)
 			} else {
 				validEntry = true
-				jStr = fmt.Sprintf("%s%d ", jStr, jpeg)
+				jStr = fmt.Sprintf("%s%d%% ", jStr, jpeg)
+			}
+			if (i+1)%8 == 0 {
+				jStr = fmt.Sprintf("%s\n%s%-41s", jStr, indent, "")
+			}
+		}
+		if validEntry {
+			printUsageHdr(indent)
+			fmt.Printf(indent+"%s\n", jStr)
+			validEntry = false
+		}
+		gStr := fmt.Sprintf("  %-36s : ", "GFX utilization")
+		for _, gfx := range stats.GetUsage().GetGFXBusyInst() {
+			// only if at least one of the gfx busy value is a valid value do we
+			// print the field
+			if gfx == UINT16_MAX_VAL_UINT32 || gfx > 100 {
+				gStr = fmt.Sprintf("%sN/A ", gStr)
+			} else {
+				validEntry = true
+				gStr = fmt.Sprintf("%s%d%% ", gStr, gfx)
+			}
+		}
+		if validEntry {
+			printUsageHdr(indent)
+			fmt.Printf(indent+"%s\n", gStr)
+			validEntry = false
+		}
+		vStr = fmt.Sprintf("  %-36s : ", "VCN utilization")
+		for _, vcn := range stats.GetUsage().GetVCNBusyInst() {
+			// only if at least one of the vcn busy value is a valid value do we
+			// print the field
+			if vcn == UINT16_MAX_VAL_UINT32 || vcn > 100 {
+				vStr = fmt.Sprintf("%sN/A ", vStr)
+			} else {
+				validEntry = true
+				vStr = fmt.Sprintf("%s%d%% ", vStr, vcn)
+			}
+		}
+		if validEntry {
+			printUsageHdr(indent)
+			fmt.Printf(indent+"%s\n", vStr)
+			validEntry = false
+		}
+		jStr = fmt.Sprintf("  %-36s : ", "JPEG utilization")
+		for i, jpeg := range stats.GetUsage().GetJPEGBusyInst() {
+			// only if at least one of the jpeg busy value is a valid value do
+			// we print the field
+			if jpeg == UINT16_MAX_VAL_UINT32 || jpeg > 100 {
+				jStr = fmt.Sprintf("%sN/A ", jStr)
+			} else {
+				validEntry = true
+				jStr = fmt.Sprintf("%s%d%% ", jStr, jpeg)
 			}
 			if (i+1)%8 == 0 {
 				jStr = fmt.Sprintf("%s\n%s%-41s", jStr, indent, "")
