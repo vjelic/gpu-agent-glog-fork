@@ -433,6 +433,10 @@ aga_gpu_api_status_to_proto (GPUStatus *proto_status,
     if (status->physical_gpu.valid()) {
         proto_status->set_physicalgpu(status->physical_gpu.id, OBJ_MAX_KEY_LEN);
     }
+    proto_status->set_kfdid(status->kfd_id);
+    proto_status->set_nodeid(status->node_id);
+    proto_status->set_drmrenderid(status->drm_render_id);
+    proto_status->set_drmcardid(status->drm_card_id);
 }
 
 // populate gpu bad page records proto buf
@@ -525,11 +529,18 @@ aga_gpu_usage_stats_to_proto (GPUUsage *proto_stats,
     proto_stats->set_gfxactivity(stats->gfx_activity);
     proto_stats->set_umcactivity(stats->umc_activity);
     proto_stats->set_mmactivity(stats->mm_activity);
-    for (uint16_t i = 0; i < stats->num_vcn; i++) {
+    for (uint16_t i = 0; i < AGA_GPU_MAX_VCN; i++) {
         proto_stats->add_vcnactivity(stats->vcn_activity[i]);
+        proto_stats->add_vcnbusyinst(stats->vcn_busy[i]);
     }
-    for (uint16_t i = 0; i < stats->num_jpeg; i++) {
+    for (uint16_t i = 0; i < AGA_GPU_MAX_JPEG; i++) {
         proto_stats->add_jpegactivity(stats->jpeg_activity[i]);
+    }
+    for (uint16_t i = 0; i < AGA_GPU_MAX_JPEG; i++) {
+        proto_stats->add_jpegbusyinst(stats->jpeg_busy[i]);
+    }
+    for (uint16_t i = 0; i < AGA_GPU_MAX_XCC; i++) {
+        proto_stats->add_gfxbusyinst(stats->gfx_busy_inst[i]);
     }
 }
 

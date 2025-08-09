@@ -73,6 +73,14 @@ smi_fill_gpu_clock_frequency_spec_ (aga_gpu_handle_t gpu_handle,
 }
 
 sdk_ret_t
+smi_gpu_init_immutable_attrs (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec,
+                              aga_gpu_status_t *status)
+{
+    // no need to do anything for mock
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
 smi_gpu_fill_spec (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec)
 {
     spec->overdrive_level = 0;
@@ -81,6 +89,21 @@ smi_gpu_fill_spec (aga_gpu_handle_t gpu_handle, aga_gpu_spec_t *spec)
     // fill gpu and memory clock frequencies
     smi_fill_gpu_clock_frequency_spec_(gpu_handle, spec);
     spec->compute_partition_type = AGA_GPU_COMPUTE_PARTITION_TYPE_SPX;
+    return SDK_RET_OK;
+}
+
+/// \brief    fill GPU enumeration ids info using the given GPU
+/// \param[in] gpu_handle    GPU handle
+/// \param[out] status    operational status to be filled
+/// \return SDK_RET_OK or error code in case of failure
+static sdk_ret_t
+smi_fill_gpu_enumeration_id_status_ (aga_gpu_handle_t gpu_handle,
+                                     aga_gpu_status_t *status)
+{
+    status->kfd_id = 58934;
+    status->node_id = 3;
+    status->drm_render_id = 128;
+    status->drm_card_id = 3;
     return SDK_RET_OK;
 }
 
@@ -151,7 +174,7 @@ smi_fill_clock_status_ (aga_gpu_handle_t gpu_handle, aga_gpu_status_t *status)
 
 sdk_ret_t
 smi_gpu_fill_status (aga_gpu_handle_t gpu_handle, uint32_t gpu_id,
-                     aga_gpu_status_t *status)
+                     aga_gpu_spec_t *spec, aga_gpu_status_t *status)
 {
     status->index = gpu_id;
     status->handle = gpu_handle;
@@ -201,11 +224,14 @@ smi_gpu_fill_status (aga_gpu_handle_t gpu_handle, uint32_t gpu_id,
     // fill kfd pid info
     smi_fill_gpu_kfd_pid_status_(gpu_handle, status);
     status->partition_id = 0;
+    smi_fill_gpu_enumeration_id_status_(gpu_handle, status);
     return SDK_RET_OK;
 }
 
 sdk_ret_t
 smi_gpu_fill_stats (aga_gpu_handle_t gpu_handle,
+                    bool partition_capable,
+                    uint32_t partition_id,
                     aga_gpu_handle_t first_partition_handle,
                     aga_gpu_stats_t *stats)
 {
@@ -572,6 +598,17 @@ sdk_ret_t
 smi_get_gpu_partition_id (aga_gpu_handle_t gpu_handle, uint32_t *partition_id)
 {
     *partition_id = 0;
+    return SDK_RET_OK;
+}
+
+sdk_ret_t
+smi_get_gpu_partition_info (aga_gpu_handle_t gpu_handle, bool *capable,
+                            aga_gpu_compute_partition_type_t *compute_partition,
+                            aga_gpu_memory_partition_type_t *memory_partition)
+{
+    *capable = true;
+    *compute_partition = AGA_GPU_COMPUTE_PARTITION_TYPE_SPX;
+    *memory_partition = AGA_GPU_MEMORY_PARTITION_TYPE_NPS1;
     return SDK_RET_OK;
 }
 

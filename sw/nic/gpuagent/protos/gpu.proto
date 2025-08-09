@@ -422,6 +422,15 @@ message GPUStatus {
   // NOTE:
   // only valid for GPU partitions (child GPUs)
   bytes                         PhysicalGPU       = 24;
+  // GPU KFD id
+  uint64                        KFDId             = 25;
+  // GPU node id
+  uint32                        NodeId            = 26;
+  // GPU device DRM render Id
+  uint32                        DRMRenderId       = 27;
+  // GPU device DRM  card Id
+  uint32                        DRMCardId         = 28;
+
 }
 
 // GPU temperature information
@@ -450,6 +459,13 @@ message GPUUsage {
   repeated uint32 VCNActivity  = 4;
   // JPEG activity as a percentage
   repeated uint32 JPEGActivity = 5;
+  // instantaneous graphics utilization per accelerated compute core as a
+  // percentage
+  repeated uint32 GFXBusyInst  = 6;
+  // instantaneous JPEG utilization per JPEG engine as a percentage
+  repeated uint32 JPEGBusyInst = 7;
+  // instantaneous VCN utilization as a percentage
+  repeated uint32 VCNBusyInst  = 8;
 }
 
 // GPU current memory usage

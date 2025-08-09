@@ -23,6 +23,8 @@ limitations under the License.
 #ifndef __AGA_API_SMI_UTILS_HPP__
 #define __AGA_API_SMI_UTILS_HPP__
 
+#include <vector>
+#include <algorithm>
 #include "nic/third-party/rocm/amd_smi_lib/include/amd_smi/amdsmi.h"
 #include "nic/sdk/include/sdk/base.hpp"
 #include "nic/gpuagent/api/include/aga_event.hpp"
@@ -33,6 +35,44 @@ namespace aga {
 /// \defgroup AGA_SMI - smi module APIs
 /// \ingroup AGA
 /// @{
+
+/// \brief function to get the low and high frequencies for a clock type
+/// \param[in] freq    supported frequencies struct from amdsmi
+/// \param[out] min    minimum supported frequency in MHz
+/// \param[out] max    maximum supported frequency in MHz
+static inline void
+find_low_high_frequency (amdsmi_frequencies_t *freq,
+                         uint32_t *min, uint32_t *max)
+{
+    // create a vector of the valid frequencies
+    std::vector<uint64_t> f(freq->frequency,
+                            freq->frequency + freq->num_supported);
+
+    // sort vector
+    std::sort(f.begin(), f.end());
+
+    // set default values
+    *min = 0xffffffff;
+    *max = 0xffffffff;
+
+    if (freq->has_deep_sleep) {
+        // lowest supported freq will be deep sleep value; set the second lowest
+        // frequency to be the minimum
+        if (f.size() > 1) {
+            *min = (uint32_t)(f[1]/1000000);
+        }
+    } else {
+        // lowest supported frequency
+        if (f.size() >= 1) {
+            *min = (uint32_t)(f[0]/1000000);
+        }
+    }
+    if (f.size() >= 1) {
+        // largest supported frequency
+        *max = (uint32_t)(f[f.size() - 1]/1000000);
+    }
+    return;
+}
 
 /// \brief convert amdsmi VRAM type to aga VRAM type
 /// \param[in] vram_type    amdsmi VRAM type
